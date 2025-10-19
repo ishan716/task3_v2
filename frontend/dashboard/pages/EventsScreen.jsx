@@ -460,7 +460,9 @@ const EventsScreen = () => {
                         >
                     <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
                       <span>Interested</span>
-                      {interestedMap[event.event_id] && <span aria-hidden="true">Γ£ô</span>}
+                      {interestedMap[event.event_id] && (
+                          <span aria-hidden="true">{"\u2713"}</span>
+                      )}
                     </span>
                         </button>
                         <button
