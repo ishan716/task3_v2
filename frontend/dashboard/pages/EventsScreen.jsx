@@ -1,6 +1,5 @@
 ﻿import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import InterestsDialog from "../components/InterestsDialog.jsx";
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -17,7 +16,6 @@ const EventsScreen = () => {
     return saved ? JSON.parse(saved) : [];
   });
   const [isMyEventsOpen, setIsMyEventsOpen] = useState(false);
-  const [showSavePopup, setShowSavePopup] = useState(false);
   const [isEditInterestsOpen, setIsEditInterestsOpen] = useState(false);
   const [viewMode, setViewMode] = useState("list");
   const [calendarDate, setCalendarDate] = useState(() => new Date());
@@ -222,14 +220,18 @@ const EventsScreen = () => {
   };
 
   const handleSave = (event) => {
-    if (!myEvents.find((e) => e.event_id === event.event_id)) {
-      const updated = [...myEvents, event];
-      updated.sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
-      setMyEvents(updated);
-      localStorage.setItem("myEvents", JSON.stringify(updated));
-      setShowSavePopup(true);
-      setTimeout(() => setShowSavePopup(false), 1500);
+    const exists = myEvents.find((e) => e.event_id === event.event_id);
+    let updated;
+    if (exists) {
+      updated = myEvents.filter((e) => e.event_id !== event.event_id);
+    } else {
+      updated = [...myEvents, event].sort(
+          (a, b) => new Date(a.start_time) - new Date(b.start_time)
+      );
     }
+    setMyEvents(updated);
+    localStorage.setItem("myEvents", JSON.stringify(updated));
+    return !exists;
   };
 
   const formatDate = (dateString) =>
@@ -394,6 +396,7 @@ const EventsScreen = () => {
             <div className="events-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAndSortedEvents.map((event) => {
                 const status = getEventStatus(event.start_time, event.end_time);
+                const isSaved = myEvents.some((saved) => saved.event_id === event.event_id);
                 return (
                     <div
                         key={event.event_id}
@@ -466,10 +469,17 @@ const EventsScreen = () => {
                     </span>
                         </button>
                         <button
-                            className="flex-1 py-2 px-4 rounded-lg font-medium text-red-600 border border-red-600 bg-transparent hover:bg-red-600 hover:text-white transition-colors"
+                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors ${
+                                isSaved
+                                    ? "bg-red-600 text-white border-red-600 hover:bg-red-700"
+                                    : "text-red-600 border-red-600 bg-transparent hover:bg-red-600 hover:text-white"
+                            }`}
                             onClick={() => handleSave(event)}
                         >
-                          Save
+                          <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+                            <span>{isSaved ? "Saved" : "Save"}</span>
+                            {isSaved && <span aria-hidden="true">{"\u2713"}</span>}
+                          </span>
                         </button>
                         <button
                             className="flex-1 py-2 px-4 rounded-lg font-medium text-black border border-black bg-transparent hover:bg-black hover:text-white transition-colors"
@@ -746,22 +756,6 @@ const EventsScreen = () => {
             />
         )}
 
-        {/* Save Success Popup */}
-        <AnimatePresence>
-          {showSavePopup && (
-              <motion.div
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.4 }}
-                  className="fixed inset-0 flex justify-center items-center z-[9999]"
-              >
-                <div className="bg-green-500 text-white p-6 rounded-full shadow-2xl flex items-center justify-center">
-                  <span className="text-4xl font-bold">Γ£ö</span>
-                </div>
-              </motion.div>
-          )}
-        </AnimatePresence>
       </div>
   );
 };
