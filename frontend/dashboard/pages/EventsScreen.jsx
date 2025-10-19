@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import InterestsDialog from "../components/InterestsDialog.jsx";
 
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
 const EventsScreen = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,10 @@ const EventsScreen = () => {
   const [isMyEventsOpen, setIsMyEventsOpen] = useState(false);
   const [showSavePopup, setShowSavePopup] = useState(false);
   const [isEditInterestsOpen, setIsEditInterestsOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("list");
+  const [calendarDate, setCalendarDate] = useState(() => new Date());
+  const [isDayEventsOpen, setIsDayEventsOpen] = useState(false);
+  const [selectedDayInfo, setSelectedDayInfo] = useState(null);
 
   const navigate = useNavigate();
   const API_BASE_URL = useMemo(
@@ -61,6 +67,52 @@ const EventsScreen = () => {
 
     return filtered;
   }, [events, searchQuery]);
+
+  const eventsByDate = useMemo(() => {
+    const map = {};
+    filteredAndSortedEvents.forEach((event) => {
+      if (!event?.start_time) return;
+      const key = new Date(event.start_time).toISOString().split("T")[0];
+      if (!map[key]) {
+        map[key] = [];
+      }
+      map[key].push(event);
+    });
+    return map;
+  }, [filteredAndSortedEvents]);
+
+  const calendarMatrix = useMemo(() => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const monthStart = new Date(year, month, 1);
+    const start = new Date(monthStart);
+    start.setDate(monthStart.getDate() - monthStart.getDay());
+
+    const weeks = [];
+    for (let week = 0; week < 6; week += 1) {
+      const days = [];
+      for (let day = 0; day < 7; day += 1) {
+        const cellDate = new Date(start);
+        cellDate.setDate(start.getDate() + week * 7 + day);
+        const isoKey = cellDate.toISOString().split("T")[0];
+        days.push({
+          date: cellDate,
+          isCurrentMonth: cellDate.getMonth() === month,
+          events: eventsByDate[isoKey] || [],
+        });
+      }
+      weeks.push(days);
+    }
+    return weeks;
+  }, [calendarDate, eventsByDate]);
+  const currentMonthLabel = useMemo(
+      () =>
+          calendarDate.toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          }),
+      [calendarDate]
+  );
 
   useEffect(() => {
     const seen = localStorage.getItem("seenEditInterestsPrompt");
@@ -189,6 +241,51 @@ const EventsScreen = () => {
         minute: "2-digit",
       });
 
+  const formatTimeRange = (start, end) => {
+    if (!start) return "";
+    const startDate = new Date(start);
+    const startLabel = startDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    if (!end) return startLabel;
+    const endDate = new Date(end);
+    const sameDay = startDate.toDateString() === endDate.toDateString();
+    const endLabel = endDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    return sameDay ? `${startLabel} - ${endLabel}` : `${startLabel} -> ${endLabel}`;
+  };
+
+  const handleMonthChange = (offset) => {
+    setCalendarDate((prev) => {
+      const next = new Date(prev);
+      next.setMonth(prev.getMonth() + offset);
+      return next;
+    });
+  };
+
+  const formatDayHeading = (date) =>
+      date.toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+  const openDayEvents = (day) => {
+    if (!day?.events?.length) return;
+    const sorted = [...day.events].sort(
+        (a, b) => new Date(a.start_time) - new Date(b.start_time)
+    );
+    setSelectedDayInfo({
+      date: day.date,
+      events: sorted,
+    });
+    setIsDayEventsOpen(true);
+  };
+
   if (loading)
     return (
         <div className="events-screen p-6">
@@ -219,7 +316,7 @@ const EventsScreen = () => {
   return (
       <div className="events-screen p-6 bg-gray-50 min-h-screen">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-6 space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <h2 className="text-3xl font-bold text-gray-800 md:mr-2 whitespace-nowrap">
               Events
@@ -252,9 +349,40 @@ const EventsScreen = () => {
               </button>
             </div>
           </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
+              <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      viewMode === "list"
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                List View
+              </button>
+              <button
+                  type="button"
+                  onClick={() => setViewMode("calendar")}
+                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      viewMode === "calendar"
+                          ? "bg-blue-600 text-white"
+                          : "text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                Calendar View
+              </button>
+            </div>
+            <span className="text-sm text-gray-500">
+              {filteredAndSortedEvents.length}{" "}
+              {filteredAndSortedEvents.length === 1 ? "event" : "events"}{" "}
+              {viewMode === "calendar" ? `in ${currentMonthLabel}` : "listed"}
+            </span>
+          </div>
         </div>
 
-        {/* Event Cards */}
+        {/* Event Content */}
         {filteredAndSortedEvents.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg shadow">
               <h3 className="mt-2 text-xl font-medium text-gray-900">
@@ -262,7 +390,7 @@ const EventsScreen = () => {
               </h3>
               <p className="mt-1 text-gray-500">Check back later for upcoming events.</p>
             </div>
-        ) : (
+        ) : viewMode === "list" ? (
             <div className="events-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredAndSortedEvents.map((event) => {
                 const status = getEventStatus(event.start_time, event.end_time);
@@ -351,6 +479,162 @@ const EventsScreen = () => {
                     </div>
                 );
               })}
+            </div>
+        ) : (
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button
+                    type="button"
+                    onClick={() => handleMonthChange(-1)}
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                >
+                  Previous
+                </button>
+                <div className="text-lg font-semibold text-gray-800">{currentMonthLabel}</div>
+                <button
+                    type="button"
+                    onClick={() => handleMonthChange(1)}
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="mt-4 grid grid-cols-7 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {WEEKDAY_LABELS.map((label) => (
+                    <div key={label} className="py-2">
+                      {label}
+                    </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-2">
+                {calendarMatrix.map((week, weekIndex) =>
+                    week.map((day, dayIndex) => {
+                      const isToday = new Date().toDateString() === day.date.toDateString();
+                      return (
+                          <div
+                              key={`${weekIndex}-${dayIndex}`}
+                              className={`min-h-[140px] rounded-lg border p-2 text-left transition-colors ${
+                                  day.isCurrentMonth
+                                      ? "border-gray-200 bg-white"
+                                      : "border-gray-200 bg-gray-100 text-gray-400"
+                              } ${isToday ? "ring-2 ring-blue-300" : ""} ${
+                                  day.events.length ? "cursor-pointer hover:bg-blue-50" : ""
+                              }`}
+                              role={day.events.length ? "button" : "presentation"}
+                              tabIndex={day.events.length ? 0 : -1}
+                              onClick={() => openDayEvents(day)}
+                              onKeyDown={(event) => {
+                                if (!day.events.length) return;
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  openDayEvents(day);
+                                }
+                              }}
+                          >
+                            <div className="mb-2 flex items-center justify-between text-xs font-semibold">
+                              <span className={isToday ? "text-blue-600" : "text-gray-600"}>
+                                {day.date.getDate()}
+                              </span>
+                              {day.events.length > 0 && (
+                                  <span className="text-[10px] font-medium text-blue-500">
+                                    {day.events.length} {day.events.length === 1 ? "event" : "events"}
+                                  </span>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              {day.events.slice(0, 3).map((event) => (
+                                  <button
+                                      type="button"
+                                      key={event.event_id}
+                                      onClick={(clickEvent) => {
+                                        clickEvent.stopPropagation();
+                                        navigate(`/events/${event.event_id}`);
+                                      }}
+                                      onKeyDown={(keyEvent) => keyEvent.stopPropagation()}
+                                      className="flex flex-col gap-1 rounded-md bg-blue-50 px-2 py-1 text-left text-xs text-blue-700 hover:bg-blue-100"
+                                  >
+                                    <span className="font-semibold truncate">{event.event_title}</span>
+                                    <span className="text-[10px] text-blue-600">
+                                      {formatTimeRange(event.start_time, event.end_time)}
+                                    </span>
+                                    {event.location && (
+                                        <span className="text-[10px] text-gray-500 truncate">
+                                          {event.location}
+                                        </span>
+                                    )}
+                                  </button>
+                              ))}
+                              {day.events.length > 3 && (
+                                  <span className="text-[10px] text-gray-500">
+                                    +{day.events.length - 3} more
+                                  </span>
+                              )}
+                            </div>
+                          </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+        )}
+
+        {/* Day Events Modal */}
+        {isDayEventsOpen && selectedDayInfo && (
+            <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 px-4">
+              <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl">
+                <div className="mb-4 flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-800">Events on this day</h2>
+                    <p className="text-sm text-gray-500">
+                      {formatDayHeading(selectedDayInfo.date)}
+                    </p>
+                  </div>
+                  <button
+                      type="button"
+                      onClick={() => {
+                        setIsDayEventsOpen(false);
+                        setSelectedDayInfo(null);
+                      }}
+                      className="rounded-full bg-gray-200 px-3 py-1 text-sm font-semibold text-gray-600 hover:bg-gray-300"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="max-h-[420px] space-y-3 overflow-y-auto pr-1">
+                  {selectedDayInfo.events.map((event) => (
+                      <div
+                          key={event.event_id}
+                          className="rounded-lg border border-gray-200 p-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{event.event_title}</h3>
+                            <p className="text-sm text-blue-600">
+                              {formatTimeRange(event.start_time, event.end_time)}
+                            </p>
+                            {event.location && (
+                                <p className="text-sm text-gray-500">{event.location}</p>
+                            )}
+                          </div>
+                          <button
+                              type="button"
+                              onClick={() => {
+                                setIsDayEventsOpen(false);
+                                setSelectedDayInfo(null);
+                                navigate(`/events/${event.event_id}`);
+                              }}
+                              className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                          >
+                            View
+                          </button>
+                        </div>
+                        {event.description && (
+                            <p className="mt-2 text-sm text-gray-600 line-clamp-3">{event.description}</p>
+                        )}
+                      </div>
+                  ))}
+                </div>
+              </div>
             </div>
         )}
 
