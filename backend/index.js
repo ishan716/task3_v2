@@ -1,3 +1,5 @@
+
+
 const express = require("express");
 // Start periodic event sync
 require("./fetchAndSyncEvents");
@@ -6,11 +8,12 @@ const { v4: uuidv4 } = require("uuid");
 const supabase = require("./db");
 const cors = require("cors");
 
+
 // routes
 const eventRoutes = require("./routes/events.routes");
 const ratingsRoutes = require("./routes/ratings.routes");
 const eventListRoutes = require("./routes/eventlist.routes");
-
+const adminAuthRouter = require("./routes/admin/auth.routes");
 const interestsRouter = require("./routes/interests.routes");
 
 const userinterestsRouter = require("./routes/userinterests.routes");
@@ -69,6 +72,9 @@ app.use("/api", eventRoutes); // includes /events/:id and related
 
 
 app.use("/api/interests", userinterestsRouter);
+
+// Admin routes
+app.use("/admin", adminAuthRouter);
 
 
 
