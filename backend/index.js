@@ -1,24 +1,29 @@
+require('dotenv').config();
 const express = require("express");
-// Start periodic event sync
-require("./fetchAndSyncEvents");
 const cookieParser = require("cookie-parser");
 const { v4: uuidv4 } = require("uuid");
-const supabase = require("./db");
 const cors = require("cors");
+
+// database & periodic tasks
+const connectDB = require("./config/mongodb");
+require("./fetchAndSyncEvents");
+const supabase = require("./db");
 
 // routes
 const eventRoutes = require("./routes/events.routes");
 const ratingsRoutes = require("./routes/ratings.routes");
 const eventListRoutes = require("./routes/eventlist.routes");
-
 const interestsRouter = require("./routes/interests.routes");
-
 const userinterestsRouter = require("./routes/userinterests.routes");
-
+const userAuthRouter = require("./routes/auth/userAuthRoutes");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
+// Connect MongoDB
+connectDB();
+
+// CORS setup
 const allowedOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
 app.use(
     cors({
@@ -27,6 +32,7 @@ app.use(
     })
 );
 
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
 
@@ -64,16 +70,11 @@ app.get("/", async (req, res) => {
 app.use("/api", interestsRouter); // includes /events/recommended, /events/discover, etc.
 app.use("/api/events", eventListRoutes); // /api/events list
 app.use("/api", ratingsRoutes);
-
 app.use("/api", eventRoutes); // includes /events/:id and related
-
-
 app.use("/api/interests", userinterestsRouter);
-
-
+app.use("/api/auth", userAuthRouter);
 
 // ------------------- START SERVER -------------------
-
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
