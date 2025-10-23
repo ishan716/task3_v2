@@ -19,7 +19,7 @@ const EventsScreen = () => {
   const [isEditInterestsOpen, setIsEditInterestsOpen] = useState(false);
   const [viewMode, setViewMode] = useState("list");
   const [calendarDate, setCalendarDate] = useState(() => new Date());
-  const [isDayEventsOpen, setIsDayEventsOpen] = useState(false);
+  const [isDayEventsOpen, setIsDayEventsOpen] = useState(false); // the popup that shows “events on a specific day” is closed initially
   const [selectedDayInfo, setSelectedDayInfo] = useState(null);
 
   const navigate = useNavigate();
@@ -84,7 +84,7 @@ const EventsScreen = () => {
     const month = calendarDate.getMonth();
     const monthStart = new Date(year, month, 1);
     const start = new Date(monthStart);
-    start.setDate(monthStart.getDate() - monthStart.getDay());
+    start.setDate(monthStart.getDate() - monthStart.getDay()); //get day means if tuesday its 2 so from this formula it gets nearest sunday
 
     const weeks = [];
     for (let week = 0; week < 6; week += 1) {
@@ -92,10 +92,10 @@ const EventsScreen = () => {
       for (let day = 0; day < 7; day += 1) {
         const cellDate = new Date(start);
         cellDate.setDate(start.getDate() + week * 7 + day);
-        const isoKey = cellDate.toISOString().split("T")[0];
+        const isoKey = cellDate.toISOString().split("T")[0]; //2021-09-15 like string
         days.push({
           date: cellDate,
-          isCurrentMonth: cellDate.getMonth() === month,
+          isCurrentMonth: cellDate.getMonth() === month, //boolean
           events: eventsByDate[isoKey] || [],
         });
       }
@@ -110,7 +110,7 @@ const EventsScreen = () => {
             year: "numeric",
           }),
       [calendarDate]
-  );
+  ); // remembers month year
 
   useEffect(() => {
     const seen = localStorage.getItem("seenEditInterestsPrompt");
@@ -122,6 +122,7 @@ const EventsScreen = () => {
 
   useEffect(() => {
     fetchEvents();
+    
   }, []);
 
   const fetchEvents = async () => {
