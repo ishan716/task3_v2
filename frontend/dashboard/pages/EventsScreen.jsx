@@ -542,40 +542,59 @@ const EventsScreen = () => {
                         </div>
                       </div>
 
-                      <div className="mt-4 flex gap-2">
+                      <div className="mt-6 flex gap-3">
                         <button
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors duration-200 ${
+                            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 group ${
                                 interestedMap[event.event_id]
-                                    ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400"
-                                    : "text-blue-600 border-blue-600 bg-transparent hover:bg-blue-600 hover:text-white dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-100"
+                                    ? "bg-emerald-600 text-white shadow-md hover:bg-emerald-500 hover:shadow-lg dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:shadow-md dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white"
                             }`}
                             onClick={() => toggleInterested(event)}
                         >
-                    <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
-                      <span>Interested</span>
-                      {interestedMap[event.event_id] && (
-                          <span aria-hidden="true">{"\u2713"}</span>
-                      )}
-                    </span>
-                        </button>
-                        <button
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors duration-200 ${
-                                isSaved
-                                    ? "bg-red-600 text-white border-red-600 hover:bg-red-700 dark:bg-red-500 dark:border-red-500 dark:hover:bg-red-400"
-                                    : "text-red-600 border-red-600 bg-transparent hover:bg-red-600 hover:text-white dark:text-red-300 dark:border-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-100"
-                            }`}
-                            onClick={() => handleSave(event)}
-                        >
-                          <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
-                            <span>{isSaved ? "Saved" : "Save"}</span>
-                            {isSaved && <span aria-hidden="true">{"\u2713"}</span>}
+                          <span className="inline-flex items-center justify-center gap-2">
+                            <svg className={`w-5 h-5 transition-transform duration-200 ${interestedMap[event.event_id] ? 'scale-110' : 'group-hover:scale-110'}`} 
+                                 viewBox="0 0 24 24" 
+                                 fill={interestedMap[event.event_id] ? "currentColor" : "none"} 
+                                 stroke="currentColor">
+                              <path strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            </svg>
+                            <span>{interestedMap[event.event_id] ? "Interested" : "Interest"}</span>
                           </span>
                         </button>
                         <button
-                            className="flex-1 py-2 px-4 rounded-lg font-medium text-gray-900 dark:text-gray-100 border border-gray-900 dark:border-gray-100 bg-transparent hover:bg-gray-900 hover:text-white dark:hover:bg-gray-100 dark:hover:text-gray-900 transition-colors duration-200"
+                            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 group ${
+                                isSaved
+                                    ? "bg-blue-600 text-white shadow-md hover:bg-blue-500 hover:shadow-lg dark:bg-blue-500 dark:hover:bg-blue-400"
+                                    : "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-md dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
+                            }`}
+                            onClick={() => handleSave(event)}
+                        >
+                          <span className="inline-flex items-center justify-center gap-2">
+                            <svg className={`w-5 h-5 transition-transform duration-200 ${isSaved ? 'scale-110' : 'group-hover:scale-110'}`} 
+                                 viewBox="0 0 24 24" 
+                                 fill={isSaved ? "currentColor" : "none"} 
+                                 stroke="currentColor">
+                              <path strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    strokeWidth={2} 
+                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                            <span>{isSaved ? "Saved" : "Save"}</span>
+                          </span>
+                        </button>
+                        <button
+                            className="flex-1 py-3 px-4 rounded-xl font-medium bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 shadow-md hover:shadow-lg transition-all duration-200 group"
                             onClick={() => navigate(`/events/${event.event_id}`)}
                         >
-                          More
+                          <span className="inline-flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                            <span>View</span>
+                          </span>
                         </button>
                       </div>
                     </div>
