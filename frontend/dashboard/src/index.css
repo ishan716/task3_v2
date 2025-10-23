@@ -1,1 +1,29 @@
 @import "tailwindcss";
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html.dark body {
+    @apply bg-gray-950 text-gray-100;
+  }
+}
+
+@layer components {
+  .events-screen {
+    @apply bg-gray-50 text-gray-900 transition-colors duration-300;
+  }
+
+  .dark .events-screen {
+    @apply bg-gray-950 text-gray-100;
+  }
+}

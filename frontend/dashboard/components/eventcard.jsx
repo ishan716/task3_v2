@@ -1,8 +1,8 @@
-import React from 'react';
+﻿import React from 'react';
 
 const EventCard = ({ event }) => {
     return (
-        <div className="max-w-sm rounded-xl overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-300 bg-gradient-to-r from-purple-400 via-pink-500 to-red-400 text-white">
+        <div className="max-w-sm rounded-xl overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-300 bg-gradient-to-r from-purple-400 via-pink-500 to-red-400 text-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 dark:text-gray-100">
             {event.image && (
                 <img className="w-full h-48 object-cover" src={event.image} alt={event.name} />
             )}
@@ -13,10 +13,10 @@ const EventCard = ({ event }) => {
                 </p>
             </div>
             <div className="px-6 pt-4 pb-4 flex justify-between items-center">
-        <span className="bg-white text-purple-700 font-bold px-3 py-1 rounded-full shadow-md">
+        <span className="bg-white text-purple-700 font-bold px-3 py-1 rounded-full shadow-md dark:bg-gray-900 dark:text-purple-200">
           {event.date}
         </span>
-                <button className="bg-yellow-400 text-purple-800 font-bold px-4 py-2 rounded-full shadow-md hover:bg-yellow-300 hover:scale-105 transition-all duration-200">
+                <button className="bg-yellow-400 text-purple-800 font-bold px-4 py-2 rounded-full shadow-md hover:bg-yellow-300 hover:scale-105 transition-all duration-200 dark:bg-yellow-500 dark:text-gray-900 dark:hover:bg-yellow-400">
                     Details
                 </button>
             </div>
@@ -25,3 +25,4 @@ const EventCard = ({ event }) => {
 };
 
 export default EventCard;
+
