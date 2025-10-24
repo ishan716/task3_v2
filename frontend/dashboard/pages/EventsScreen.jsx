@@ -148,7 +148,9 @@ const EventsScreen = () => {
 
   // Local wrapper ensures Tailwind's class-based dark variant always has an ancestor
   const wrapperClass = darkMode ? "dark" : "";
-  const baseScreenClasses = "events-screen p-6 min-h-screen transition-colors duration-300";
+  const baseScreenClasses = darkMode 
+    ? "events-screen p-6 min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-950 transition-colors duration-300"
+    : "events-screen p-6 min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 transition-colors duration-300";
 
   const fetchEvents = async () => {
     try {
@@ -441,14 +443,14 @@ const EventsScreen = () => {
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-lg transition-all duration-200">
+            <div className="inline-flex overflow-hidden rounded-lg border border-purple-200 bg-white/80 backdrop-blur-sm shadow-sm dark:border-purple-800 dark:bg-gray-800/80 dark:shadow-lg transition-all duration-200">
               <button
                   type="button"
                   onClick={() => setViewMode("list")}
                   className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       viewMode === "list"
-                          ? "bg-blue-600 text-white dark:bg-blue-500 shadow-md"
-                          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/80"
+                          ? "bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500 shadow-md"
+                          : "text-teal-700 hover:bg-gradient-to-r hover:from-teal-400 hover:via-sky-400 hover:to-indigo-400 hover:text-white dark:text-teal-300 dark:hover:bg-gray-700/80"
                   }`}
               >
                 List View
@@ -458,8 +460,8 @@ const EventsScreen = () => {
                   onClick={() => setViewMode("calendar")}
                   className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                       viewMode === "calendar"
-                          ? "bg-blue-600 text-white dark:bg-blue-500"
-                          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                          ? "bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500"
+                          : "text-teal-700 hover:bg-gradient-to-r hover:from-teal-400 hover:via-sky-400 hover:to-indigo-400 hover:text-white dark:text-teal-300 dark:hover:bg-gray-700"
                   }`}
               >
                 Calendar View
@@ -592,7 +594,7 @@ const EventsScreen = () => {
                           </span>
                         </button>
                         <button
-                            className="flex-1 py-3 px-4 rounded-xl font-medium bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100 shadow-md hover:shadow-lg transition-all duration-200 group"
+                            className="flex-1 py-3 px-4 rounded-xl font-medium bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white hover:from-teal-500 hover:via-sky-500 hover:to-indigo-500 dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500 shadow-md hover:shadow-lg transition-all duration-200 group"
                             onClick={() => navigate(`/events/${event.event_id}`)}
                         >
                           <span className="inline-flex items-center justify-center gap-2">
@@ -621,7 +623,7 @@ const EventsScreen = () => {
                   </svg>
                   <span className="hidden sm:inline">Previous</span>
                 </button>
-                <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">
                   {currentMonthLabel}
                 </h2>
                 <button
@@ -683,7 +685,7 @@ const EventsScreen = () => {
                             <div className="mb-1 sm:mb-2 flex items-center justify-between">
                               <span className={`flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full font-semibold text-xs sm:text-sm
                                 ${isToday 
-                                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md dark:from-blue-500 dark:to-indigo-500" 
+                                  ? "bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white shadow-md dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500" 
                                   : day.isCurrentMonth 
                                     ? "bg-white text-gray-700 group-hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:group-hover:bg-gray-700" 
                                     : "bg-gray-100 text-gray-400 dark:bg-gray-800/70 dark:text-gray-500"
@@ -710,7 +712,7 @@ const EventsScreen = () => {
                                         navigate(`/events/${event.event_id}`);
                                       }}
                                       onKeyDown={(keyEvent) => keyEvent.stopPropagation()}
-                                      className="flex flex-col gap-0.5 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-1 sm:p-2 text-left hover:from-blue-100 hover:to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 dark:hover:from-blue-800/60 dark:hover:to-indigo-800/60 transition-all duration-200"
+                                      className="flex flex-col gap-0.5 rounded-lg bg-gradient-to-r from-teal-50 via-sky-50 to-indigo-50 p-1 sm:p-2 text-left hover:from-teal-100 hover:via-sky-100 hover:to-indigo-100 dark:from-teal-900/40 dark:via-sky-900/40 dark:to-indigo-900/40 dark:hover:from-teal-800/60 dark:hover:via-sky-800/60 dark:hover:to-indigo-800/60 transition-all duration-200"
                                   >
                                     <span className="font-semibold text-[10px] sm:text-xs text-blue-800 dark:text-blue-200 truncate transition-colors duration-200">
                                       {event.event_title}
