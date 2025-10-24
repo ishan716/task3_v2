@@ -1,16 +1,20 @@
-import { Routes, Route } from "react-router-dom";
+﻿import { Routes, Route } from "react-router-dom";
 import EventsScreen from "../pages/EventsScreen.jsx";
 import SingleEventDetailPage from "../pages/SingleEventDetailPage.jsx";
 import FeedbackPage from "../pages/FeedbackPage.jsx";
 import RecommendedEvents from "../pages/RecommendedEvents.jsx";
 
 export default function App() {
-    return (
-        <Routes>
-            <Route path="/" element={<EventsScreen />} />
-            <Route path="/events/:id" element={<SingleEventDetailPage />} />
-            <Route path="/events/:eventId/feedback" element={<FeedbackPage />} />
-            <Route path="/recommended" element={<RecommendedEvents />} />
-        </Routes>
-    );
+  return (
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 transition-colors duration-500">
+      <Routes>
+        <Route path="/" element={<EventsScreen />} />
+        <Route path="/events/:id" element={<SingleEventDetailPage />} />
+        <Route path="/events/:eventId/feedback" element={<FeedbackPage />} />
+        <Route path="/recommended" element={<RecommendedEvents />} />
+      </Routes>
+    </div>
+  );
 }
+
+

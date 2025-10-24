@@ -5,22 +5,22 @@ import InterestsDialog from "../components/InterestsDialog.jsx";
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const EventsScreen = () => {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [hoveredEvent, setHoveredEvent] = useState(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [interestedMap, setInterestedMap] = useState({});
+  const [events, setEvents] = useState([]);  // all events fetched from API
+  const [loading, setLoading] = useState(true); // loading state
+  const [error, setError] = useState(null); // error state
+  const [hoveredEvent, setHoveredEvent] = useState(null); // currently hovered event for UI effects mouse moving over
+  const [searchQuery, setSearchQuery] = useState(""); //stores the text typed in the search bar to filter events
+  const [interestedMap, setInterestedMap] = useState({}); // keeps track of which events the user marked as "Interested"
   const [myEvents, setMyEvents] = useState(() => {
-    const saved = localStorage.getItem("myEvents");
+    const saved = localStorage.getItem("myEvents"); // retrieve saved events from localStorage
     return saved ? JSON.parse(saved) : [];
   });
-  const [isMyEventsOpen, setIsMyEventsOpen] = useState(false);
-  const [isEditInterestsOpen, setIsEditInterestsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState("list");
-  const [calendarDate, setCalendarDate] = useState(() => new Date());
-  const [isDayEventsOpen, setIsDayEventsOpen] = useState(false);
-  const [selectedDayInfo, setSelectedDayInfo] = useState(null);
+  const [isMyEventsOpen, setIsMyEventsOpen] = useState(false); // state for "My Events" modal
+  const [isEditInterestsOpen, setIsEditInterestsOpen] = useState(false);// state for "Edit Interests" dialog
+  const [viewMode, setViewMode] = useState("list"); // "list" or "calendar"
+  const [calendarDate, setCalendarDate] = useState(() => new Date()); // current month/year in calendar
+  const [isDayEventsOpen, setIsDayEventsOpen] = useState(false); // the popup that shows "events on a specific day" is closed initially
+  const [selectedDayInfo, setSelectedDayInfo] = useState(null); // info for the selected day in calendar
 
   const navigate = useNavigate();
   const API_BASE_URL = useMemo(
@@ -28,18 +28,39 @@ const EventsScreen = () => {
       []
   );
 
-  // ≡ƒƒó Helper function for status
+  // Dark mode toggle state
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("darkMode") === "true";
+  });
+
+  useEffect(() => {
+    // Keep the root element in sync so Tailwind's `dark:` classes activate immediately
+    const root = window.document.documentElement;
+    const body = window.document.body;
+    if (darkMode) {
+      root.classList.add("dark");
+      body.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+      body.classList.remove("dark");
+    }
+    localStorage.setItem("darkMode", darkMode);
+  }, [darkMode]);
+
+  
+
+  // Helper function for status badges
   const getEventStatus = (start, end) => {
     const now = new Date();
     const startDate = new Date(start);
     const endDate = new Date(end);
 
     if (now >= startDate && now <= endDate) {
-      return { label: "On Going", color: "bg-green-100 text-green-700" };
+      return { label: "On Going", color: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-200" };
     } else if (now < startDate) {
-      return { label: "Up Coming", color: "bg-yellow-100 text-yellow-700" };
+      return { label: "Up Coming", color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-200" };
     } else {
-      return { label: "Ended", color: "bg-red-100 text-red-700" };
+      return { label: "Ended", color: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200" };
     }
   };
 
@@ -84,7 +105,7 @@ const EventsScreen = () => {
     const month = calendarDate.getMonth();
     const monthStart = new Date(year, month, 1);
     const start = new Date(monthStart);
-    start.setDate(monthStart.getDate() - monthStart.getDay());
+    start.setDate(monthStart.getDate() - monthStart.getDay()); //get day means if tuesday its 2 so from this formula it gets nearest sunday
 
     const weeks = [];
     for (let week = 0; week < 6; week += 1) {
@@ -92,10 +113,10 @@ const EventsScreen = () => {
       for (let day = 0; day < 7; day += 1) {
         const cellDate = new Date(start);
         cellDate.setDate(start.getDate() + week * 7 + day);
-        const isoKey = cellDate.toISOString().split("T")[0];
+        const isoKey = cellDate.toISOString().split("T")[0]; //2021-09-15 like string
         days.push({
           date: cellDate,
-          isCurrentMonth: cellDate.getMonth() === month,
+          isCurrentMonth: cellDate.getMonth() === month, //boolean
           events: eventsByDate[isoKey] || [],
         });
       }
@@ -110,19 +131,23 @@ const EventsScreen = () => {
             year: "numeric",
           }),
       [calendarDate]
-  );
+  ); // remembers month year
 
   useEffect(() => {
-    const seen = localStorage.getItem("seenEditInterestsPrompt");
+    const seen = localStorage.getItem("seenEditInterestsPrompt"); //check if user has seen the prompt before
     if (!seen) {
-      setIsEditInterestsOpen(true);
-      localStorage.setItem("seenEditInterestsPrompt", "1");
+      setIsEditInterestsOpen(true); //open the dialog if not seen(first time user)
+      localStorage.setItem("seenEditInterestsPrompt", "1"); //then mark as seen
     }
   }, []);
 
   useEffect(() => {
     fetchEvents();
   }, []);
+
+  // Local wrapper ensures Tailwind's class-based dark variant always has an ancestor
+  const wrapperClass = darkMode ? "dark" : "";
+  const baseScreenClasses = "events-screen p-6 min-h-screen transition-colors duration-300";
 
   const fetchEvents = async () => {
     try {
@@ -134,9 +159,9 @@ const EventsScreen = () => {
       const data = await response.json();
       setEvents(data || []);
 
-      // Load interested status
+      // Load interested status  (promise.all promise all the fetch calls even one fails it says false)
       if (Array.isArray(data) && data.length) {
-        const pairs = await Promise.all(
+        const pairs = await Promise.all(  
             data.map(async (e) => {
               try {
                 const r = await fetch(`${API_BASE_URL}/api/interested/status/${e.event_id}`, {
@@ -161,9 +186,9 @@ const EventsScreen = () => {
       setLoading(false);
     }
   };
-
+//interested status in ui and backend handling
   const toggleInterested = async (event) => {
-    const id = event.event_id;
+    const id = event.event_id; // identify which event is clicked
     const prev = !!interestedMap[id];
     const next = !prev;
 
@@ -181,7 +206,7 @@ const EventsScreen = () => {
                 : e
         )
     );
-
+// if interested backend post else delete and update interested count 
     try {
       const method = next ? "POST" : "DELETE";
       const r = await fetch(`${API_BASE_URL}/api/interested`, {
@@ -218,7 +243,7 @@ const EventsScreen = () => {
       alert("Sorry, something went wrong. Please try again.");
     }
   };
-
+//handle my events. and save to localstorage sort by date.
   const handleSave = (event) => {
     const exists = myEvents.find((e) => e.event_id === event.event_id);
     let updated;
@@ -233,7 +258,7 @@ const EventsScreen = () => {
     localStorage.setItem("myEvents", JSON.stringify(updated));
     return !exists;
   };
-
+//output nice readable format of date and time
   const formatDate = (dateString) =>
       new Date(dateString).toLocaleDateString("en-US", {
         year: "numeric",
@@ -242,7 +267,7 @@ const EventsScreen = () => {
         hour: "2-digit",
         minute: "2-digit",
       });
-
+//creates user friendly time range display
   const formatTimeRange = (start, end) => {
     if (!start) return "";
     const startDate = new Date(start);
@@ -259,7 +284,7 @@ const EventsScreen = () => {
     });
     return sameDay ? `${startLabel} - ${endLabel}` : `${startLabel} -> ${endLabel}`;
   };
-
+//calendar month navigation
   const handleMonthChange = (offset) => {
     setCalendarDate((prev) => {
       const next = new Date(prev);
@@ -267,7 +292,7 @@ const EventsScreen = () => {
       return next;
     });
   };
-
+//format day heading for popup
   const formatDayHeading = (date) =>
       date.toLocaleDateString("en-US", {
         weekday: "long",
@@ -275,7 +300,7 @@ const EventsScreen = () => {
         month: "long",
         day: "numeric",
       });
-
+//opens the day events popup when a day cell is clicked in calendar
   const openDayEvents = (day) => {
     if (!day?.events?.length) return;
     const sorted = [...day.events].sort(
@@ -290,37 +315,43 @@ const EventsScreen = () => {
 
   if (loading)
     return (
-        <div className="events-screen p-6">
-          <h2 className="text-2xl font-bold mb-4">Events</h2>
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className={wrapperClass}>
+          <div className={baseScreenClasses}>
+            <h2 className="text-2xl font-bold mb-4">Events</h2>
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
           </div>
         </div>
     );
 
   if (error)
     return (
-        <div className="events-screen p-6">
-          <h2 className="text-2xl font-bold mb-4">Events</h2>
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            <p className="font-bold">Error loading events:</p>
-            <p>{error}</p>
-            <button
-                onClick={fetchEvents}
-                className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
-            >
-              Try Again
-            </button>
+        <div className={wrapperClass}>
+          <div className={baseScreenClasses}>
+            <h2 className="text-2xl font-bold mb-4">Events</h2>
+            <div className="bg-red-100 dark:bg-red-900/40 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded transition-colors duration-300">
+              <p className="font-bold">Error loading events:</p>
+              <p>{error}</p>
+              <button
+                  onClick={fetchEvents}
+                  className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
         </div>
     );
 
   return (
-      <div className="events-screen p-6 bg-gray-50 min-h-screen">
+      <div className={wrapperClass}>
+        <div className={baseScreenClasses}>
         {/* Header */}
+
         <div className="mb-6 space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <h2 className="text-3xl font-bold text-gray-800 md:mr-2 whitespace-nowrap">
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">
               Events
             </h2>
             <input
@@ -328,8 +359,25 @@ const EventsScreen = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search events by title, description, or location..."
-                className="w-full md:flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full md:flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400 transition-colors duration-200"
             />
+            <button
+                onClick={() => setDarkMode((prev) => !prev)}
+                aria-pressed={darkMode}
+                className="ml-3 px-4 py-2 rounded-lg font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-white transition-all duration-200"
+            >  {/* Icon changes based on dark mode state */}
+                {darkMode ? (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+            </button>
+
+
             <div className="flex items-center gap-3 md:ml-auto">
               <button
                   onClick={() => navigate("/recommended")}
@@ -352,14 +400,14 @@ const EventsScreen = () => {
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm">
+            <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-lg transition-all duration-200">
               <button
                   type="button"
                   onClick={() => setViewMode("list")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       viewMode === "list"
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-600 hover:bg-gray-100"
+                          ? "bg-blue-600 text-white dark:bg-blue-500 shadow-md"
+                          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/80"
                   }`}
               >
                 List View
@@ -367,16 +415,16 @@ const EventsScreen = () => {
               <button
                   type="button"
                   onClick={() => setViewMode("calendar")}
-                  className={`px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                       viewMode === "calendar"
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-600 hover:bg-gray-100"
+                          ? "bg-blue-600 text-white dark:bg-blue-500"
+                          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                   }`}
               >
                 Calendar View
               </button>
             </div>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-500 dark:text-gray-400 transition-colors duration-200">
               {filteredAndSortedEvents.length}{" "}
               {filteredAndSortedEvents.length === 1 ? "event" : "events"}{" "}
               {viewMode === "calendar" ? `in ${currentMonthLabel}` : "listed"}
@@ -385,12 +433,13 @@ const EventsScreen = () => {
         </div>
 
         {/* Event Content */}
+        {/* Render a dark-mode aware empty state when filters return nothing */}
         {filteredAndSortedEvents.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
-              <h3 className="mt-2 text-xl font-medium text-gray-900">
+            <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:border dark:border-gray-700 dark:shadow-[0_35px_70px_-40px_rgba(0,0,0,0.85)] transition-all duration-200">
+              <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-100">
                 No events scheduled
               </h3>
-              <p className="mt-1 text-gray-500">Check back later for upcoming events.</p>
+              <p className="mt-1 text-gray-500 dark:text-gray-400">Check back later for upcoming events.</p>
             </div>
         ) : viewMode === "list" ? (
             <div className="events-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -400,10 +449,10 @@ const EventsScreen = () => {
                 return (
                     <div
                         key={event.event_id}
-                        className={`event-card relative bg-white border border-gray-200 rounded-xl p-5 shadow-sm transition-all duration-300 transform ${
+                        className={`event-card relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:shadow-xl transition-all duration-300 transform ${
                             hoveredEvent === event.event_id
-                                ? "shadow-xl scale-105 border-blue-300 ring-2 ring-blue-100"
-                                : "hover:shadow-md"
+                                ? "shadow-xl scale-105 border-blue-300 dark:border-blue-500 ring-2 ring-blue-100 dark:ring-blue-500/40 dark:bg-gray-700"
+                                : "hover:shadow-md dark:hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                         onMouseEnter={() => setHoveredEvent(event.event_id)}
                         onMouseLeave={() => setHoveredEvent(null)}
@@ -419,8 +468,8 @@ const EventsScreen = () => {
                         <h3
                             className={`text-xl font-semibold mb-2 transition-colors duration-300 ${
                                 hoveredEvent === event.event_id
-                                    ? "text-blue-700"
-                                    : "text-gray-900"
+                                    ? "text-blue-700 dark:text-blue-300"
+                                    : "text-gray-900 dark:text-gray-100"
                             }`}
                             onClick={() => navigate(`/events/${event.event_id}`)}
                             role="button"
@@ -434,19 +483,19 @@ const EventsScreen = () => {
                           {event.event_title}
                         </h3>
                         {event.description && (
-                            <p className="text-gray-600 mb-4 line-clamp-3">{event.description}</p>
+                            <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 transition-colors duration-200">{event.description}</p>
                         )}
 
                         <div className="space-y-2 text-sm">
                           <div className="flex items-start">
-                      <span className="text-gray-700">
+                      <span className="text-gray-700 dark:text-gray-200 transition-colors duration-200">
                         {formatDate(event.start_time)}
                         {event.end_time && ` - ${formatDate(event.end_time)}`}
                       </span>
                           </div>
                           {event.location && (
                               <div className="flex items-start">
-                                <span className="text-gray-700">{event.location}</span>
+                                <span className="text-gray-700 dark:text-gray-200 transition-colors duration-200">{event.location}</span>
                               </div>
                           )}
                         </div>
@@ -454,10 +503,10 @@ const EventsScreen = () => {
 
                       <div className="mt-4 flex gap-2">
                         <button
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors ${
+                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors duration-200 ${
                                 interestedMap[event.event_id]
-                                    ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-                                    : "text-blue-600 border-blue-600 bg-transparent hover:bg-blue-600 hover:text-white"
+                                    ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400"
+                                    : "text-blue-600 border-blue-600 bg-transparent hover:bg-blue-600 hover:text-white dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-100"
                             }`}
                             onClick={() => toggleInterested(event)}
                         >
@@ -469,10 +518,10 @@ const EventsScreen = () => {
                     </span>
                         </button>
                         <button
-                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors ${
+                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors duration-200 ${
                                 isSaved
-                                    ? "bg-red-600 text-white border-red-600 hover:bg-red-700"
-                                    : "text-red-600 border-red-600 bg-transparent hover:bg-red-600 hover:text-white"
+                                    ? "bg-red-600 text-white border-red-600 hover:bg-red-700 dark:bg-red-500 dark:border-red-500 dark:hover:bg-red-400"
+                                    : "text-red-600 border-red-600 bg-transparent hover:bg-red-600 hover:text-white dark:text-red-300 dark:border-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-100"
                             }`}
                             onClick={() => handleSave(event)}
                         >
@@ -482,7 +531,7 @@ const EventsScreen = () => {
                           </span>
                         </button>
                         <button
-                            className="flex-1 py-2 px-4 rounded-lg font-medium text-black border border-black bg-transparent hover:bg-black hover:text-white transition-colors"
+                            className="flex-1 py-2 px-4 rounded-lg font-medium text-gray-900 dark:text-gray-100 border border-gray-900 dark:border-gray-100 bg-transparent hover:bg-gray-900 hover:text-white dark:hover:bg-gray-100 dark:hover:text-gray-900 transition-colors duration-200"
                             onClick={() => navigate(`/events/${event.event_id}`)}
                         >
                           More
@@ -493,13 +542,13 @@ const EventsScreen = () => {
               })}
             </div>
         ) : (
-            <div className="rounded-2xl border border-gray-200 bg-white/80 backdrop-blur-sm p-3 sm:p-6 shadow-lg">
+            <div className="rounded-2xl border border-gray-200 bg-white dark:bg-gray-800 p-3 sm:p-6 shadow-lg dark:border-gray-700 dark:shadow-2xl transition-all duration-200">
               {/* Calendar Header */}
               <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
                 <button
                     type="button"
                     onClick={() => handleMonthChange(-1)}
-                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 transition-all duration-200 flex items-center gap-1 sm:gap-2"
+                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 transition-all duration-200 flex items-center gap-1 sm:gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -512,7 +561,7 @@ const EventsScreen = () => {
                 <button
                     type="button"
                     onClick={() => handleMonthChange(1)}
-                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 transition-all duration-200 flex items-center gap-1 sm:gap-2"
+                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 transition-all duration-200 flex items-center gap-1 sm:gap-2"
                 >
                   <span className="hidden sm:inline">Next</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -525,7 +574,7 @@ const EventsScreen = () => {
               <div className="grid grid-cols-7 mb-2 sm:mb-4">
                 {WEEKDAY_LABELS.map((label) => (
                     <div key={label} className="text-center">
-                      <span className="text-[10px] sm:text-xs font-bold tracking-wider text-gray-500 bg-gray-100/80 px-1.5 sm:px-3 py-1 rounded-full inline-block">
+                      <span className="text-[10px] sm:text-xs font-bold tracking-wider text-gray-500 bg-gray-100/80 px-1.5 sm:px-3 py-1 rounded-full inline-block dark:text-gray-300 dark:bg-gray-800/60 transition-colors duration-200">
                         {label.charAt(0)}
                         <span className="hidden sm:inline">{label.slice(1)}</span>
                       </span>
@@ -543,12 +592,12 @@ const EventsScreen = () => {
                               key={`${weekIndex}-${dayIndex}`}
                               className={`group min-h-[80px] sm:min-h-[140px] rounded-lg sm:rounded-xl p-1.5 sm:p-3 text-left transition-all duration-200 ${
                                   day.isCurrentMonth
-                                      ? "bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md"
-                                      : "bg-gray-50/80 text-gray-400"
+                                      ? "bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md dark:bg-gray-950/70 dark:text-gray-100 dark:hover:bg-gray-950"
+                                      : "bg-gray-50/80 text-gray-400 dark:bg-gray-900/40 dark:text-gray-500"
                               } ${
                                   isToday 
-                                      ? "ring-1 sm:ring-2 ring-blue-400 shadow-lg" 
-                                      : "border border-gray-100"
+                                      ? "ring-1 sm:ring-2 ring-blue-400 shadow-lg dark:ring-blue-400/60" 
+                                      : "border border-gray-100 dark:border-gray-700"
                               } ${
                                   day.events.length 
                                       ? "cursor-pointer hover:-translate-y-0.5 sm:hover:-translate-y-1 hover:shadow-lg" 
@@ -568,15 +617,15 @@ const EventsScreen = () => {
                             <div className="mb-1 sm:mb-2 flex items-center justify-between">
                               <span className={`flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full font-semibold text-xs sm:text-sm
                                 ${isToday 
-                                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md" 
+                                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md dark:from-blue-500 dark:to-indigo-500" 
                                   : day.isCurrentMonth 
-                                    ? "bg-white text-gray-700 group-hover:bg-gray-100" 
-                                    : "bg-gray-100 text-gray-400"
+                                    ? "bg-white text-gray-700 group-hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:group-hover:bg-gray-700" 
+                                    : "bg-gray-100 text-gray-400 dark:bg-gray-800/70 dark:text-gray-500"
                                 }`}>
                                 {day.date.getDate()}
                               </span>
                               {day.events.length > 0 && (
-                                  <span className="flex items-center gap-0.5 rounded-full bg-blue-100 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-blue-700">
+                                  <span className="flex items-center gap-0.5 rounded-full bg-blue-100 px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-blue-700 dark:bg-blue-500/20 dark:text-blue-200 transition-colors duration-200">
                                     <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -595,12 +644,12 @@ const EventsScreen = () => {
                                         navigate(`/events/${event.event_id}`);
                                       }}
                                       onKeyDown={(keyEvent) => keyEvent.stopPropagation()}
-                                      className="flex flex-col gap-0.5 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-1 sm:p-2 text-left hover:from-blue-100 hover:to-indigo-100 transition-all duration-200"
+                                      className="flex flex-col gap-0.5 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-1 sm:p-2 text-left hover:from-blue-100 hover:to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 dark:hover:from-blue-800/60 dark:hover:to-indigo-800/60 transition-all duration-200"
                                   >
-                                    <span className="font-semibold text-[10px] sm:text-xs text-blue-800 truncate">
+                                    <span className="font-semibold text-[10px] sm:text-xs text-blue-800 dark:text-blue-200 truncate transition-colors duration-200">
                                       {event.event_title}
                                     </span>
-                                    <span className="hidden sm:flex text-[10px] text-blue-600 items-center gap-1">
+                                    <span className="hidden sm:flex text-[10px] text-blue-600 dark:text-blue-300 items-center gap-1 transition-colors duration-200">
                                       <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -608,7 +657,7 @@ const EventsScreen = () => {
                                       {formatTimeRange(event.start_time, event.end_time)}
                                     </span>
                                     {event.location && (
-                                        <span className="hidden sm:flex text-[10px] text-blue-500 items-center gap-1 truncate">
+                                        <span className="hidden sm:flex text-[10px] text-blue-500 dark:text-blue-300 items-center gap-1 truncate transition-colors duration-200">
                                           <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                               d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -621,7 +670,7 @@ const EventsScreen = () => {
                                   </button>
                               ))}
                               {day.events.length > 3 && (
-                                  <span className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-50 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 text-center">
+                                  <span className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-50 rounded-lg px-1.5 sm:px-2 py-0.5 sm:py-1 text-center dark:text-blue-200 dark:bg-blue-500/10 transition-colors duration-200">
                                     +{day.events.length - 3} more
                                   </span>
                               )}
@@ -637,13 +686,13 @@ const EventsScreen = () => {
         {/* Day Events Modal */}
         {isDayEventsOpen && selectedDayInfo && (
             <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/60 p-2 sm:p-4 backdrop-blur-sm">
-              <div className="w-full max-w-lg rounded-2xl bg-white/90 p-4 sm:p-8 shadow-2xl border border-gray-100">
+              <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-800 p-4 sm:p-8 shadow-2xl border border-gray-100 dark:border-gray-700 dark:text-gray-100 transition-all duration-200">
                 <div className="mb-4 sm:mb-6 flex items-start justify-between">
                   <div>
                     <h2 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
                       Events on this day
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-600 flex items-center gap-1 sm:gap-2">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 flex items-center gap-1 sm:gap-2 transition-colors duration-200">
                       <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                           d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -657,7 +706,7 @@ const EventsScreen = () => {
                         setIsDayEventsOpen(false);
                         setSelectedDayInfo(null);
                       }}
-                      className="rounded-xl bg-gray-100 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors duration-200 flex items-center gap-1 sm:gap-2"
+                      className="rounded-xl bg-gray-100 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700 transition-colors duration-200 flex items-center gap-1 sm:gap-2"
                   >
                     <svg className="w-3.5 sm:w-4 h-3.5 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -669,16 +718,16 @@ const EventsScreen = () => {
                   {selectedDayInfo.events.map((event) => (
                       <div
                           key={event.event_id}
-                          className="rounded-lg border border-gray-200 p-4 shadow-sm"
+                          className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm hover:shadow-md dark:shadow-lg dark:hover:shadow-xl transition-all duration-200"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{event.event_title}</h3>
-                            <p className="text-sm text-blue-600">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 transition-colors duration-200">{event.event_title}</h3>
+                            <p className="text-sm text-blue-600 dark:text-blue-300 transition-colors duration-200">
                               {formatTimeRange(event.start_time, event.end_time)}
                             </p>
                             {event.location && (
-                                <p className="text-sm text-gray-500">{event.location}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-300 transition-colors duration-200">{event.location}</p>
                             )}
                           </div>
                           <button
@@ -688,13 +737,13 @@ const EventsScreen = () => {
                                 setSelectedDayInfo(null);
                                 navigate(`/events/${event.event_id}`);
                               }}
-                              className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700"
+                              className="rounded-md bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400"
                           >
                             View
                           </button>
                         </div>
                         {event.description && (
-                            <p className="mt-2 text-sm text-gray-600 line-clamp-3">{event.description}</p>
+                            <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-3 transition-colors duration-200">{event.description}</p>
                         )}
                       </div>
                   ))}
@@ -705,32 +754,32 @@ const EventsScreen = () => {
 
         {/* My Events Modal */}
         {isMyEventsOpen && (
-            <div className="fixed inset-0 flex justify-center items-start pt-20 z-50 backdrop-blur-sm bg-white/20">
-              <div className="bg-gradient-to-b from-white to-blue-200 rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
-                <h2 className="text-2xl font-bold mb-4 text-gray-800 text-center">My Events</h2>
+            <div className="fixed inset-0 flex justify-center items-start pt-20 z-50 backdrop-blur-sm bg-white/20 dark:bg-black/75 transition-all duration-200">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 relative text-gray-900 dark:text-gray-100 transition-all duration-200">
+                <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100 text-center">My Events</h2>
                 <button
-                    className="absolute top-2 right-2 text-gray-800 hover:text-black font-bold text-xl"
+                    className="absolute top-2 right-2 text-gray-800 hover:text-black dark:text-gray-300 dark:hover:text-white font-bold text-xl transition-colors duration-200"
                     onClick={() => setIsMyEventsOpen(false)}
                 >
-                  Γ£ò
+                  X
                 </button>
                 {myEvents.length === 0 ? (
-                    <p className="text-center text-gray-600 mt-6">No saved events yet.</p>
+                    <p className="text-center text-gray-600 dark:text-gray-300 mt-6 transition-colors duration-200">No saved events yet.</p>
                 ) : (
                     <ul className="space-y-4 max-h-80 overflow-y-auto">
                       {myEvents.map((event) => (
                           <li
                               key={event.event_id}
-                              className="flex justify-between items-center p-3 bg-white/70 rounded-lg shadow-sm hover:shadow-md transition-all"
+                              className="flex justify-between items-center p-3 bg-white/80 dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md dark:shadow-lg dark:hover:shadow-xl transition-all duration-200"
                           >
                             <div>
-                              <h3 className="font-semibold text-gray-800">{event.event_title}</h3>
-                              <p className="text-sm text-gray-600 mt-1">
+                              <h3 className="font-semibold text-gray-800 dark:text-gray-100 transition-colors duration-200">{event.event_title}</h3>
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 transition-colors duration-200">
                                 {new Date(event.start_time).toLocaleString()}
                               </p>
                             </div>
                             <button
-                                className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 transition-colors"
+                                className="bg-red-600 text-white px-3 py-1 rounded-lg hover:bg-red-700 dark:hover:bg-red-500 transition-colors duration-200"
                                 onClick={() => {
                                   const updated = myEvents.filter((e) => e.event_id !== event.event_id);
                                   setMyEvents(updated);
@@ -756,8 +805,14 @@ const EventsScreen = () => {
             />
         )}
 
+        </div>
       </div>
   );
 };
 
 export default EventsScreen;
+
+
+
+
+
