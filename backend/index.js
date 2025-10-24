@@ -1,3 +1,6 @@
+
+
+
 const express = require("express");
 // Start periodic event sync
 require("./fetchAndSyncEvents");
@@ -7,6 +10,8 @@ const supabase = require("./db");
 const cors = require("cors");
 
 // routes
+const notificationsRouter = require("./routes/notifications.routes");
+
 const eventRoutes = require("./routes/events.routes");
 const ratingsRoutes = require("./routes/ratings.routes");
 const eventListRoutes = require("./routes/eventlist.routes");
@@ -44,7 +49,7 @@ app.use((req, res, next) => {
     }
     next();
 });
-
+app.use("/api/notifications", notificationsRouter);
 // ------------------- TEST ROUTE -------------------
 app.get("/", async (req, res) => {
     try {

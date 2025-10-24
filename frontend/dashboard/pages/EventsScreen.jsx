@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import InterestsDialog from "../components/InterestsDialog.jsx";
+import NotificationsPanel from "../components/NotificationsPanel.jsx";
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -364,6 +365,10 @@ const EventsScreen = () => {
                 placeholder="Search events by title, description, or location..."
                 className="w-full md:flex-1 rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:ring-blue-400 transition-colors duration-200"
             />
+            <div className="flex items-center gap-3 md:ml-auto">
+              <NotificationsPanel />      
+  
+
             <button
                 onClick={() => setDarkMode((prev) => !prev)}
                 aria-pressed={darkMode}
@@ -441,6 +446,7 @@ const EventsScreen = () => {
                 </>
               )}
             </div>
+          </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex overflow-hidden rounded-lg border border-purple-200 bg-white/80 backdrop-blur-sm shadow-sm dark:border-purple-800 dark:bg-gray-800/80 dark:shadow-lg transition-all duration-200">

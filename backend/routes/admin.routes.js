@@ -1,5 +1,6 @@
 const express = require("express");
 const supabase = require("../db");
+const { createNotification} = require("../untils/notify");
 
 const router = express.Router();
 
@@ -118,6 +119,7 @@ router.get("/events/:id", async (req, res) => {
 
     try {
         const event = await fetchEvent(eventId);
+        
         res.json(event);
     } catch (err) {
         if (err?.code === "PGRST116") {
@@ -186,6 +188,12 @@ router.post("/events", async (req, res) => {
         }
 
         const event = await fetchEvent(eventId);
+        await createNotification(
+            "system", // or organizer_id if you track who added it
+            "New Event Added!",
+            `A new event "${event_title}" has been added.`,
+            `/events/${eventId}`
+            );
         res.status(201).json(event);
     } catch (err) {
         console.error("Admin POST /events error:", err.message);

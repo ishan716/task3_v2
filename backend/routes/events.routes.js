@@ -14,6 +14,7 @@ const fieldMap = {
     interested_count: "interested_count",
 };
 
+
 // ------------------- EVENT ROUTES -------------------
 
 // Get event details
