@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API, apiGet, apiJSON } from "../api";
 
 const initialForm = {
@@ -48,6 +49,7 @@ function computeStatus(event) {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
@@ -197,17 +199,26 @@ export default function AdminDashboard() {
               Manage events and categories.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              resetForm();
-              loadEvents();
-              loadCategories();
-            }}
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-          >
-            Refresh
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => navigate("/admin/analytics")}
+              className="inline-flex items-center rounded-md border border-blue-200 bg-white px-4 py-2 text-sm font-medium text-blue-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-800 dark:bg-gray-900 dark:text-blue-200 dark:hover:border-blue-600 dark:hover:bg-blue-900/20"
+            >
+              View Analytics
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                loadEvents();
+                loadCategories();
+              }}
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            >
+              Refresh
+            </button>
+          </div>
         </header>
 
         {error && (
