@@ -149,7 +149,7 @@ const EventsScreen = () => {
   // Local wrapper ensures Tailwind's class-based dark variant always has an ancestor
   const wrapperClass = darkMode ? "dark" : "";
   const baseScreenClasses = darkMode 
-    ? "events-screen p-6 min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-indigo-950 transition-colors duration-300"
+    ? "events-screen p-6 min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-teal-950 transition-colors duration-300"
     : "events-screen p-6 min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 transition-colors duration-300";
 
   const fetchEvents = async () => {
@@ -370,7 +370,7 @@ const EventsScreen = () => {
                 className="ml-3 px-4 py-2 rounded-lg font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-white transition-all duration-200"
             >  {/* Icon changes based on dark mode state */}
                 {darkMode ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 ) : (
@@ -492,11 +492,19 @@ const EventsScreen = () => {
                 return (
                     <div
                         key={event.event_id}
-                        className={`event-card relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:shadow-xl transition-all duration-300 transform ${
-                            hoveredEvent === event.event_id
-                                ? "shadow-xl scale-105 border-blue-300 dark:border-blue-500 ring-2 ring-blue-100 dark:ring-blue-500/40 dark:bg-gray-700"
-                                : "hover:shadow-md dark:hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700"
-                        }`}
+                        className={`event-card relative rounded-xl p-5 shadow-sm transition-all duration-300 transform
+                            ${darkMode 
+                              ? "bg-gradient-to-br from-blue-900/90 to-teal-900/90 border border-blue-800 shadow-xl" 
+                              : "bg-white border border-gray-200"
+                            }
+                            ${hoveredEvent === event.event_id
+                                ? darkMode 
+                                    ? "shadow-xl scale-105 border-blue-500 ring-2 ring-blue-500/40 from-blue-800 to-teal-800"
+                                    : "shadow-xl scale-105 border-blue-300 ring-2 ring-blue-100"
+                                : darkMode
+                                    ? "hover:shadow-lg hover:from-blue-800/90 hover:to-teal-800/90"
+                                    : "hover:shadow-md hover:bg-gray-50"
+                            }`}
                         onMouseEnter={() => setHoveredEvent(event.event_id)}
                         onMouseLeave={() => setHoveredEvent(null)}
                     >
@@ -510,9 +518,13 @@ const EventsScreen = () => {
                       <div>
                         <h3
                             className={`text-xl font-semibold mb-2 transition-colors duration-300 ${
-                                hoveredEvent === event.event_id
-                                    ? "text-blue-700 dark:text-blue-300"
-                                    : "text-gray-900 dark:text-gray-100"
+                                darkMode
+                                    ? hoveredEvent === event.event_id
+                                        ? "text-sky-300"
+                                        : "text-white"
+                                    : hoveredEvent === event.event_id
+                                        ? "text-blue-700"
+                                        : "text-gray-900"
                             }`}
                             onClick={() => navigate(`/events/${event.event_id}`)}
                             role="button"
@@ -526,25 +538,31 @@ const EventsScreen = () => {
                           {event.event_title}
                         </h3>
                         {event.description && (
-                            <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 transition-colors duration-200">{event.description}</p>
+                            <p className={`mb-4 line-clamp-3 transition-colors duration-200 ${
+                                darkMode ? "text-gray-200" : "text-gray-600"
+                            }`}>{event.description}</p>
                         )}
 
                         <div className="space-y-2 text-sm">
                           <div className="flex items-start">
-                      <span className="text-gray-700 dark:text-gray-200 transition-colors duration-200">
-                        {formatDate(event.start_time)}
-                        {event.end_time && ` - ${formatDate(event.end_time)}`}
-                      </span>
+                            <span className={`transition-colors duration-200 ${
+                                darkMode ? "text-gray-100" : "text-gray-700"
+                            }`}>
+                              {formatDate(event.start_time)}
+                              {event.end_time && ` - ${formatDate(event.end_time)}`}
+                            </span>
                           </div>
                           {event.location && (
                               <div className="flex items-center gap-2 text-sm">
-                                <svg className="w-4 h-4 text-rose-500 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className={`w-4 h-4 ${darkMode ? "text-sky-400" : "text-rose-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
-                                <span className="text-gray-700 dark:text-gray-200 transition-colors duration-200">{event.location}</span>
+                                <span className={`transition-colors duration-200 ${
+                                    darkMode ? "text-gray-100" : "text-gray-700"
+                                }`}>{event.location}</span>
                               </div>
                           )}
                         </div>
@@ -610,13 +628,21 @@ const EventsScreen = () => {
               })}
             </div>
         ) : (
-            <div className="rounded-2xl border border-gray-200 bg-white dark:bg-gray-800 p-3 sm:p-6 shadow-lg dark:border-gray-700 dark:shadow-2xl transition-all duration-200">
+            <div className={`rounded-2xl border p-3 sm:p-6 shadow-lg transition-all duration-200 ${
+                darkMode 
+                  ? "border-blue-800 bg-gradient-to-br from-blue-900/90 to-teal-900/90 shadow-2xl" 
+                  : "border-gray-200 bg-white"
+              }`}>
               {/* Calendar Header */}
               <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
                 <button
                     type="button"
                     onClick={() => handleMonthChange(-1)}
-                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 transition-all duration-200 flex items-center gap-1 sm:gap-2"
+                    className={`rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all duration-200 flex items-center gap-1 sm:gap-2 ${
+                      darkMode
+                        ? "text-gray-100 hover:bg-blue-800/50 border-2 border-blue-700 hover:border-blue-600"
+                        : "text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300"
+                    }`}
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -629,7 +655,11 @@ const EventsScreen = () => {
                 <button
                     type="button"
                     onClick={() => handleMonthChange(1)}
-                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 transition-all duration-200 flex items-center gap-1 sm:gap-2"
+                    className={`rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all duration-200 flex items-center gap-1 sm:gap-2 ${
+                      darkMode
+                        ? "text-gray-100 hover:bg-sky-400/20 border-2 border-sky-700 hover:border-sky-600"
+                        : "text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300"
+                    }`}
                 >
                   <span className="hidden sm:inline">Next</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -642,7 +672,11 @@ const EventsScreen = () => {
               <div className="grid grid-cols-7 mb-2 sm:mb-4">
                 {WEEKDAY_LABELS.map((label) => (
                     <div key={label} className="text-center">
-                      <span className="text-[10px] sm:text-xs font-bold tracking-wider text-gray-500 bg-gray-100/80 px-1.5 sm:px-3 py-1 rounded-full inline-block dark:text-gray-300 dark:bg-gray-800/60 transition-colors duration-200">
+                      <span className={`text-[10px] sm:text-xs font-bold tracking-wider px-1.5 sm:px-3 py-1 rounded-full inline-block transition-colors duration-200 ${
+                        darkMode
+                          ? "text-sky-300 bg-blue-900/60"
+                          : "text-gray-500 bg-gray-100/80"
+                      }`}>
                         {label.charAt(0)}
                         <span className="hidden sm:inline">{label.slice(1)}</span>
                       </span>
@@ -659,13 +693,17 @@ const EventsScreen = () => {
                           <div
                               key={`${weekIndex}-${dayIndex}`}
                               className={`group min-h-[80px] sm:min-h-[140px] rounded-lg sm:rounded-xl p-1.5 sm:p-3 text-left transition-all duration-200 ${
-                                  day.isCurrentMonth
-                                      ? "bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md dark:bg-gray-950/70 dark:text-gray-100 dark:hover:bg-gray-950"
-                                      : "bg-gray-50/80 text-gray-400 dark:bg-gray-900/40 dark:text-gray-500"
+                                  darkMode
+                                    ? day.isCurrentMonth
+                                        ? "bg-gradient-to-br from-blue-900/70 to-teal-900/70 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-100 hover:from-blue-800/70 hover:to-teal-800/70"
+                                        : "bg-gradient-to-br from-blue-950/40 to-teal-950/40 text-gray-500"
+                                    : day.isCurrentMonth
+                                        ? "bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md"
+                                        : "bg-gray-50/80 text-gray-400"
                               } ${
                                   isToday 
-                                      ? "ring-1 sm:ring-2 ring-blue-400 shadow-lg dark:ring-blue-400/60" 
-                                      : "border border-gray-100 dark:border-gray-700"
+                                      ? `ring-1 sm:ring-2 shadow-lg ${darkMode ? "ring-sky-400/60" : "ring-blue-400"}` 
+                                      : `border ${darkMode ? "border-blue-800/50" : "border-gray-100"}`
                               } ${
                                   day.events.length 
                                       ? "cursor-pointer hover:-translate-y-0.5 sm:hover:-translate-y-1 hover:shadow-lg" 
@@ -714,10 +752,14 @@ const EventsScreen = () => {
                                       onKeyDown={(keyEvent) => keyEvent.stopPropagation()}
                                       className="flex flex-col gap-0.5 rounded-lg bg-gradient-to-r from-teal-50 via-sky-50 to-indigo-50 p-1 sm:p-2 text-left hover:from-teal-100 hover:via-sky-100 hover:to-indigo-100 dark:from-teal-900/40 dark:via-sky-900/40 dark:to-indigo-900/40 dark:hover:from-teal-800/60 dark:hover:via-sky-800/60 dark:hover:to-indigo-800/60 transition-all duration-200"
                                   >
-                                    <span className="font-semibold text-[10px] sm:text-xs text-blue-800 dark:text-blue-200 truncate transition-colors duration-200">
+                                    <span className={`font-semibold text-[10px] sm:text-xs truncate transition-colors duration-200 ${
+                                      darkMode ? "text-sky-300" : "text-blue-800"
+                                    }`}>
                                       {event.event_title}
                                     </span>
-                                    <span className="hidden sm:flex text-[10px] text-blue-600 dark:text-blue-300 items-center gap-1 transition-colors duration-200">
+                                    <span className={`hidden sm:flex text-[10px] items-center gap-1 transition-colors duration-200 ${
+                                      darkMode ? "text-sky-200" : "text-blue-600"
+                                    }`}>
                                       <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
