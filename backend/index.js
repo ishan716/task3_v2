@@ -14,6 +14,7 @@ const eventListRoutes = require("./routes/eventlist.routes");
 const interestsRouter = require("./routes/interests.routes");
 
 const userinterestsRouter = require("./routes/userinterests.routes");
+const adminRoutes = require("./routes/admin.routes");
 
 
 const app = express();
@@ -69,6 +70,7 @@ app.use("/api", eventRoutes); // includes /events/:id and related
 
 
 app.use("/api/interests", userinterestsRouter);
+app.use("/api/admin", adminRoutes);
 
 
 
