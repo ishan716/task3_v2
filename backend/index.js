@@ -16,6 +16,7 @@ const eventListRoutes = require("./routes/eventlist.routes");
 const interestsRouter = require("./routes/interests.routes");
 const userinterestsRouter = require("./routes/userinterests.routes");
 const userAuthRouter = require("./routes/auth/userAuthRoutes");
+const adminAuthRouter = require("./routes/auth/adminAuthRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,6 +74,7 @@ app.use("/api", ratingsRoutes);
 app.use("/api", eventRoutes); // includes /events/:id and related
 app.use("/api/interests", userinterestsRouter);
 app.use("/api/auth", userAuthRouter);
+app.use("/api/auth/admin", adminAuthRouter);
 
 // ------------------- START SERVER -------------------
 app.listen(PORT, () => {
