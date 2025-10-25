@@ -1,6 +1,7 @@
 // backend/routes/events.routes.js
 const express = require("express");
 const supabase = require("../db");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -145,9 +146,9 @@ router.get("/events/:id/status", async (req, res) => {
 // ------------------- INTERESTED EVENTS -------------------
 
 // Mark event as interested
-router.post("/interested", async (req, res) => {
+router.post("/interested", requireAuth, async (req, res) => {
     const { event_id } = req.body;
-    const user_id = req.cookies.userId;
+    const user_id = req.userId;
     if (!event_id) return res.status(400).json({ error: "event_id is required" });
 
     try {
@@ -203,11 +204,10 @@ router.post("/interested", async (req, res) => {
 });
 
 // Remove interested
-router.delete("/interested", async (req, res) => {
+router.delete("/interested", requireAuth, async (req, res) => {
     const { event_id } = req.body;
-    const user_id = req.cookies.userId;
+    const user_id = req.userId;
     if (!event_id) return res.status(400).json({ error: "event_id is required" });
-    if (!user_id) return res.status(400).json({ error: "userId cookie is missing" });
 
     try {
         const { error: deleteError } = await supabase
@@ -240,11 +240,10 @@ router.delete("/interested", async (req, res) => {
 });
 
 // Check interested status for a user
-router.get("/interested/status/:event_id", async (req, res) => {
+router.get("/interested/status/:event_id", requireAuth, async (req, res) => {
     const { event_id } = req.params;
-    const user_id = req.cookies.userId;
+    const user_id = req.userId;
     if (!event_id) return res.status(400).json({ error: "event_id is required" });
-    if (!user_id) return res.status(400).json({ error: "userId cookie is missing" });
 
     try {
         const { data, error } = await supabase

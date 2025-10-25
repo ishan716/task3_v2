@@ -1,7 +1,9 @@
 const express = require("express");
 const supabase = require("../db");
+const { requireAdmin } = require("../middleware/auth");
 
 const router = express.Router();
+router.use(requireAdmin);
 
 function computeEventStatus(event) {
     const now = Date.now();

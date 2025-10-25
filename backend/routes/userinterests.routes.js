@@ -1,27 +1,11 @@
 // backend/userinterests.routes.js
 const express = require("express");
-const cookieParser = require("cookie-parser");
-const { randomUUID } = require("crypto");
 const supabase = require("../db");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
-const COOKIE_NAME = "userId";
 
-// cookie attach
-router.use(cookieParser());
-router.use((req, res, next) => {
-  let id = req.cookies?.[COOKIE_NAME];
-  if (!id) {
-    id = randomUUID();
-    res.cookie(COOKIE_NAME, id, {
-      httpOnly: true, sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 365, path: "/"
-    });
-  }
-  req.userId = id;
-  next();
-});
+router.use(requireAuth);
 
 // ✅ relative paths (because of app.use("/interests", ...))
 

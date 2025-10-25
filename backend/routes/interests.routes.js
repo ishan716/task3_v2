@@ -1,26 +1,8 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
-const { randomUUID } = require("crypto");
 const supabase = require("../db");
+const { requireAuth } = require("../middleware/auth");
 
 const router = express.Router();
-const COOKIE_NAME = "userId";
-
-// set/read anonymous user cookie
-router.use(cookieParser());
-router.use((req, res, next) => {
-  let id = req.cookies?.[COOKIE_NAME];
-  if (!id) {
-    id = randomUUID();
-    res.cookie(COOKIE_NAME, id, {
-      httpOnly: true, sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 365, path: "/",
-    });
-  }
-  req.userId = id;
-  next();
-});
 
 // GET all categories
 router.get("/categories", async (_req, res) => {
@@ -31,6 +13,8 @@ router.get("/categories", async (_req, res) => {
   if (error) return res.status(500).json({ error: error.message });
   res.json(data || []);
 });
+
+router.use(requireAuth);
 
 // GET my interests (with names)
 router.get("/interests/me", async (req, res) => {

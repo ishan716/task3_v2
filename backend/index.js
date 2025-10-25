@@ -5,9 +5,9 @@ const express = require("express");
 // Start periodic event sync
 require("./fetchAndSyncEvents");
 const cookieParser = require("cookie-parser");
-const { v4: uuidv4 } = require("uuid");
 const supabase = require("./db");
 const cors = require("cors");
+const { attachUser } = require("./middleware/auth");
 
 // routes
 const notificationsRouter = require("./routes/notifications.routes");
@@ -20,6 +20,7 @@ const interestsRouter = require("./routes/interests.routes");
 
 const userinterestsRouter = require("./routes/userinterests.routes");
 const adminRoutes = require("./routes/admin.routes");
+const authRoutes = require("./routes/auth.routes");
 
 
 const app = express();
@@ -35,20 +36,9 @@ app.use(
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(attachUser);
 
-// Set a stable userId cookie if missing
-app.use((req, res, next) => {
-    if (!req.cookies.userId) {
-        res.cookie("userId", uuidv4(), {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: false,
-            maxAge: 31536000000, // 1 year
-            path: "/",
-        });
-    }
-    next();
-});
+app.use("/api/auth", authRoutes);
 app.use("/api/notifications", notificationsRouter);
 // ------------------- TEST ROUTE -------------------
 app.get("/", async (req, res) => {

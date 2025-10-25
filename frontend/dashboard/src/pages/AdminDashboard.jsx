@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API, apiGet, apiJSON } from "../api";
+import { getStoredUser } from "../auth";
 
 const initialForm = {
   event_title: "",
@@ -51,6 +52,7 @@ function computeStatus(event) {
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
+  const [authorized, setAuthorized] = useState(false);
   const [categories, setCategories] = useState([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -84,10 +86,24 @@ export default function AdminDashboard() {
   }
 
   useEffect(() => {
+    const stored = getStoredUser();
+    if (!stored) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (!stored.is_admin) {
+      navigate("/", { replace: true });
+      return;
+    }
+    setAuthorized(true);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!authorized) return;
     loadEvents();
     loadCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authorized]);
 
   function resetForm() {
     setForm(initialForm);
@@ -186,6 +202,14 @@ export default function AdminDashboard() {
   }
 
   const totalEvents = useMemo(() => events.length, [events]);
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">
+        Checking permissions...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-950 py-10">

@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import InterestsDialog from "../components/InterestsDialog.jsx";
 import NotificationsPanel from "../components/NotificationsPanel.jsx";
+import { apiGet } from "../src/api.js";
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -48,6 +49,24 @@ const EventsScreen = () => {
     }
     localStorage.setItem("darkMode", darkMode);
   }, [darkMode]);
+
+  // Prompt first-time users to pick interests if they have none
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const mine = await apiGet("/api/interests/me").catch(() => ({ categories: [] }));
+        if (cancelled) return;
+        const count = Array.isArray(mine?.categories) ? mine.categories.length : 0;
+        if (count === 0) setIsEditInterestsOpen(true);
+      } catch (err) {
+        console.error("Failed to check interests", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   
 
@@ -927,6 +946,9 @@ const EventsScreen = () => {
 };
 
 export default EventsScreen;
+
+
+
 
 
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { API, apiGet } from "../api";
+import { getStoredUser } from "../auth";
 
 function formatDateTime(value) {
   if (!value) return "--";
@@ -48,6 +49,7 @@ function getDefaultFilters() {
 }
 
 export default function AdminAnalytics() {
+  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -55,6 +57,20 @@ export default function AdminAnalytics() {
   const [appliedFilters, setAppliedFilters] = useState(() => getDefaultFilters());
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [exporting, setExporting] = useState(false);
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    const stored = getStoredUser();
+    if (!stored) {
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (!stored.is_admin) {
+      navigate("/", { replace: true });
+      return;
+    }
+    setAuthorized(true);
+  }, [navigate]);
 
   const fetchAnalytics = useCallback(
     async (filtersToApply) => {
@@ -100,6 +116,7 @@ export default function AdminAnalytics() {
   );
 
   useEffect(() => {
+    if (!authorized) return undefined;
     let cancelled = false;
 
     async function loadCategories() {
@@ -123,11 +140,12 @@ export default function AdminAnalytics() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authorized]);
 
   useEffect(() => {
+    if (!authorized) return;
     fetchAnalytics(getDefaultFilters());
-  }, [fetchAnalytics]);
+  }, [authorized, fetchAnalytics]);
 
   const handleStartDateChange = (event) => {
     const value = event.target.value;
@@ -258,6 +276,14 @@ export default function AdminAnalytics() {
     () => timeline.reduce((max, item) => Math.max(max, item.eventCount || 0), 0),
     [timeline]
   );
+
+  if (!authorized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">
+        Checking permissions...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 dark:bg-gray-950">
