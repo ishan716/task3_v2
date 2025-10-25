@@ -71,8 +71,8 @@ export default function InterestsDialog({ open, onClose, onSaved }) {
               onClick={() => toggle(c.category_id)}
               className={`px-3 py-1.5 rounded-full border text-sm transition-colors
                 ${selected.has(c.category_id)
-                  ? "bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white border-transparent dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500"
-                  : "bg-white hover:bg-gradient-to-r hover:from-teal-50 hover:via-sky-50 hover:to-indigo-50 border-gray-300 text-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"}`}
+                  ? "bg-blue-600 text-white border-blue-600 dark:bg-blue-500 dark:border-blue-400"
+                  : "bg-white hover:bg-gray-50 border-gray-300 text-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800"}`}
             >
               {c.category_name}
             </button>
@@ -83,7 +83,7 @@ export default function InterestsDialog({ open, onClose, onSaved }) {
       <div className="flex justify-end gap-2 mt-4">
         <button onClick={onClose} className="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-900">Not now</button>
         <button onClick={submit} disabled={!selected.size || saving}
-          className="px-4 py-2 rounded-lg bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white disabled:bg-gray-400 hover:from-teal-500 hover:via-sky-500 hover:to-indigo-500 disabled:hover:bg-gray-400 dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500">
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white disabled:bg-gray-400 hover:bg-blue-700 disabled:hover:bg-gray-400 dark:bg-blue-500 dark:hover:bg-blue-400">
           {saving ? "Saving..." : "Save interests"}
         </button>
       </div>
