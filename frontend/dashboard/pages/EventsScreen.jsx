@@ -21,7 +21,6 @@ const EventsScreen = () => {
   const [calendarDate, setCalendarDate] = useState(() => new Date()); // current month/year in calendar
   const [isDayEventsOpen, setIsDayEventsOpen] = useState(false); // the popup that shows "events on a specific day" is closed initially
   const [selectedDayInfo, setSelectedDayInfo] = useState(null); // info for the selected day in calendar
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // state for the 3-dot menu dropdown
 
   const navigate = useNavigate();
   const API_BASE_URL = useMemo(
@@ -148,9 +147,7 @@ const EventsScreen = () => {
 
   // Local wrapper ensures Tailwind's class-based dark variant always has an ancestor
   const wrapperClass = darkMode ? "dark" : "";
-  const baseScreenClasses = darkMode 
-    ? "events-screen p-6 min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-teal-950 transition-colors duration-300"
-    : "events-screen p-6 min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 transition-colors duration-300";
+  const baseScreenClasses = "events-screen p-6 min-h-screen transition-colors duration-300";
 
   const fetchEvents = async () => {
     try {
@@ -370,7 +367,7 @@ const EventsScreen = () => {
                 className="ml-3 px-4 py-2 rounded-lg font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-white transition-all duration-200"
             >  {/* Icon changes based on dark mode state */}
                 {darkMode ? (
-                  <svg className="w-5 h-5 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 ) : (
@@ -381,76 +378,36 @@ const EventsScreen = () => {
             </button>
 
 
-            <div className="relative md:ml-auto">
+            <div className="flex items-center gap-3 md:ml-auto">
               <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                aria-label="Menu"
+                  onClick={() => navigate("/recommended")}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-800"
               >
-                <svg className="w-6 h-6 text-gray-700 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
+                Recommended Events
               </button>
-
-              {isDropdownOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-10"
-                    onClick={() => setIsDropdownOpen(false)}
-                  ></div>
-                  <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 z-20">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          navigate("/recommended");
-                          setIsDropdownOpen(false);
-                        }}
-                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        Recommended Events
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditInterestsOpen(true);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                        Edit Interests
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsMyEventsOpen(true);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                        My Events
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+              <button
+                  onClick={() => setIsEditInterestsOpen(true)}
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
+              >
+                Edit Interests
+              </button>
+              <button
+                  onClick={() => setIsMyEventsOpen(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                My Events
+              </button>
             </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex overflow-hidden rounded-lg border border-purple-200 bg-white/80 backdrop-blur-sm shadow-sm dark:border-purple-800 dark:bg-gray-800/80 dark:shadow-lg transition-all duration-200">
+            <div className="inline-flex overflow-hidden rounded-lg border border-gray-300 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800 dark:shadow-lg transition-all duration-200">
               <button
                   type="button"
                   onClick={() => setViewMode("list")}
                   className={`px-4 py-2 text-sm font-medium transition-all duration-200 ${
                       viewMode === "list"
-                          ? "bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500 shadow-md"
-                          : "text-teal-700 hover:bg-gradient-to-r hover:from-teal-400 hover:via-sky-400 hover:to-indigo-400 hover:text-white dark:text-teal-300 dark:hover:bg-gray-700/80"
+                          ? "bg-blue-600 text-white dark:bg-blue-500 shadow-md"
+                          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700/80"
                   }`}
               >
                 List View
@@ -460,8 +417,8 @@ const EventsScreen = () => {
                   onClick={() => setViewMode("calendar")}
                   className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                       viewMode === "calendar"
-                          ? "bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500"
-                          : "text-teal-700 hover:bg-gradient-to-r hover:from-teal-400 hover:via-sky-400 hover:to-indigo-400 hover:text-white dark:text-teal-300 dark:hover:bg-gray-700"
+                          ? "bg-blue-600 text-white dark:bg-blue-500"
+                          : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                   }`}
               >
                 Calendar View
@@ -492,19 +449,11 @@ const EventsScreen = () => {
                 return (
                     <div
                         key={event.event_id}
-                        className={`event-card relative rounded-xl p-5 shadow-sm transition-all duration-300 transform
-                            ${darkMode 
-                              ? "bg-gradient-to-br from-blue-900/90 to-teal-900/90 border border-blue-800 shadow-xl" 
-                              : "bg-white border border-gray-200"
-                            }
-                            ${hoveredEvent === event.event_id
-                                ? darkMode 
-                                    ? "shadow-xl scale-105 border-blue-500 ring-2 ring-blue-500/40 from-blue-800 to-teal-800"
-                                    : "shadow-xl scale-105 border-blue-300 ring-2 ring-blue-100"
-                                : darkMode
-                                    ? "hover:shadow-lg hover:from-blue-800/90 hover:to-teal-800/90"
-                                    : "hover:shadow-md hover:bg-gray-50"
-                            }`}
+                        className={`event-card relative bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:shadow-xl transition-all duration-300 transform ${
+                            hoveredEvent === event.event_id
+                                ? "shadow-xl scale-105 border-blue-300 dark:border-blue-500 ring-2 ring-blue-100 dark:ring-blue-500/40 dark:bg-gray-700"
+                                : "hover:shadow-md dark:hover:shadow-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                        }`}
                         onMouseEnter={() => setHoveredEvent(event.event_id)}
                         onMouseLeave={() => setHoveredEvent(null)}
                     >
@@ -518,13 +467,9 @@ const EventsScreen = () => {
                       <div>
                         <h3
                             className={`text-xl font-semibold mb-2 transition-colors duration-300 ${
-                                darkMode
-                                    ? hoveredEvent === event.event_id
-                                        ? "text-sky-300"
-                                        : "text-white"
-                                    : hoveredEvent === event.event_id
-                                        ? "text-blue-700"
-                                        : "text-gray-900"
+                                hoveredEvent === event.event_id
+                                    ? "text-blue-700 dark:text-blue-300"
+                                    : "text-gray-900 dark:text-gray-100"
                             }`}
                             onClick={() => navigate(`/events/${event.event_id}`)}
                             role="button"
@@ -538,89 +483,58 @@ const EventsScreen = () => {
                           {event.event_title}
                         </h3>
                         {event.description && (
-                            <p className={`mb-4 line-clamp-3 transition-colors duration-200 ${
-                                darkMode ? "text-gray-200" : "text-gray-600"
-                            }`}>{event.description}</p>
+                            <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3 transition-colors duration-200">{event.description}</p>
                         )}
 
                         <div className="space-y-2 text-sm">
                           <div className="flex items-start">
-                            <span className={`transition-colors duration-200 ${
-                                darkMode ? "text-gray-100" : "text-gray-700"
-                            }`}>
-                              {formatDate(event.start_time)}
-                              {event.end_time && ` - ${formatDate(event.end_time)}`}
-                            </span>
+                      <span className="text-gray-700 dark:text-gray-200 transition-colors duration-200">
+                        {formatDate(event.start_time)}
+                        {event.end_time && ` - ${formatDate(event.end_time)}`}
+                      </span>
                           </div>
                           {event.location && (
-                              <div className="flex items-center gap-2 text-sm">
-                                <svg className={`w-4 h-4 ${darkMode ? "text-sky-400" : "text-rose-500"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span className={`transition-colors duration-200 ${
-                                    darkMode ? "text-gray-100" : "text-gray-700"
-                                }`}>{event.location}</span>
+                              <div className="flex items-start">
+                                <span className="text-gray-700 dark:text-gray-200 transition-colors duration-200">{event.location}</span>
                               </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="mt-6 flex gap-3">
+                      <div className="mt-4 flex gap-2">
                         <button
-                            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 group ${
+                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors duration-200 ${
                                 interestedMap[event.event_id]
-                                    ? "bg-emerald-600 text-white shadow-md hover:bg-emerald-500 hover:shadow-lg dark:bg-emerald-500 dark:hover:bg-emerald-400"
-                                    : "bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:shadow-md dark:bg-emerald-500/10 dark:text-emerald-300 dark:hover:bg-emerald-500 dark:hover:text-white"
+                                    ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400"
+                                    : "text-blue-600 border-blue-600 bg-transparent hover:bg-blue-600 hover:text-white dark:text-blue-300 dark:border-blue-400 dark:hover:bg-blue-500/20 dark:hover:text-blue-100"
                             }`}
                             onClick={() => toggleInterested(event)}
                         >
-                          <span className="inline-flex items-center justify-center gap-2">
-                            <svg className={`w-5 h-5 transition-transform duration-200 ${interestedMap[event.event_id] ? 'scale-110' : 'group-hover:scale-110'}`} 
-                                 viewBox="0 0 24 24" 
-                                 fill={interestedMap[event.event_id] ? "currentColor" : "none"} 
-                                 stroke="currentColor">
-                              <path strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth={2} 
-                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                            <span>{interestedMap[event.event_id] ? "Interested" : "Interest"}</span>
-                          </span>
+                    <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
+                      <span>Interested</span>
+                      {interestedMap[event.event_id] && (
+                          <span aria-hidden="true">{"\u2713"}</span>
+                      )}
+                    </span>
                         </button>
                         <button
-                            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all duration-200 group ${
+                            className={`flex-1 py-2 px-4 rounded-lg font-medium border transition-colors duration-200 ${
                                 isSaved
-                                    ? "bg-blue-600 text-white shadow-md hover:bg-blue-500 hover:shadow-lg dark:bg-blue-500 dark:hover:bg-blue-400"
-                                    : "bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-md dark:bg-blue-500/10 dark:text-blue-300 dark:hover:bg-blue-500 dark:hover:text-white"
+                                    ? "bg-red-600 text-white border-red-600 hover:bg-red-700 dark:bg-red-500 dark:border-red-500 dark:hover:bg-red-400"
+                                    : "text-red-600 border-red-600 bg-transparent hover:bg-red-600 hover:text-white dark:text-red-300 dark:border-red-400 dark:hover:bg-red-500/20 dark:hover:text-red-100"
                             }`}
                             onClick={() => handleSave(event)}
                         >
-                          <span className="inline-flex items-center justify-center gap-2">
-                            <svg className={`w-5 h-5 transition-transform duration-200 ${isSaved ? 'scale-110' : 'group-hover:scale-110'}`} 
-                                 viewBox="0 0 24 24" 
-                                 fill={isSaved ? "currentColor" : "none"} 
-                                 stroke="currentColor">
-                              <path strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth={2} 
-                                    d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
+                          <span className="inline-flex items-center justify-center gap-2 whitespace-nowrap">
                             <span>{isSaved ? "Saved" : "Save"}</span>
+                            {isSaved && <span aria-hidden="true">{"\u2713"}</span>}
                           </span>
                         </button>
                         <button
-                            className="flex-1 py-3 px-4 rounded-xl font-medium bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white hover:from-teal-500 hover:via-sky-500 hover:to-indigo-500 dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500 shadow-md hover:shadow-lg transition-all duration-200 group"
+                            className="flex-1 py-2 px-4 rounded-lg font-medium text-gray-900 dark:text-gray-100 border border-gray-900 dark:border-gray-100 bg-transparent hover:bg-gray-900 hover:text-white dark:hover:bg-gray-100 dark:hover:text-gray-900 transition-colors duration-200"
                             onClick={() => navigate(`/events/${event.event_id}`)}
                         >
-                          <span className="inline-flex items-center justify-center gap-2">
-                            <svg className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                            </svg>
-                            <span>View</span>
-                          </span>
+                          More
                         </button>
                       </div>
                     </div>
@@ -628,38 +542,26 @@ const EventsScreen = () => {
               })}
             </div>
         ) : (
-            <div className={`rounded-2xl border p-3 sm:p-6 shadow-lg transition-all duration-200 ${
-                darkMode 
-                  ? "border-blue-800 bg-gradient-to-br from-blue-900/90 to-teal-900/90 shadow-2xl" 
-                  : "border-gray-200 bg-white"
-              }`}>
+            <div className="rounded-2xl border border-gray-200 bg-white dark:bg-gray-800 p-3 sm:p-6 shadow-lg dark:border-gray-700 dark:shadow-2xl transition-all duration-200">
               {/* Calendar Header */}
               <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 mb-4 sm:mb-6">
                 <button
                     type="button"
                     onClick={() => handleMonthChange(-1)}
-                    className={`rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all duration-200 flex items-center gap-1 sm:gap-2 ${
-                      darkMode
-                        ? "text-gray-100 hover:bg-blue-800/50 border-2 border-blue-700 hover:border-blue-600"
-                        : "text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300"
-                    }`}
+                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 transition-all duration-200 flex items-center gap-1 sm:gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                   <span className="hidden sm:inline">Previous</span>
                 </button>
-                <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 bg-clip-text text-transparent">
+                <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                   {currentMonthLabel}
                 </h2>
                 <button
                     type="button"
                     onClick={() => handleMonthChange(1)}
-                    className={`rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium transition-all duration-200 flex items-center gap-1 sm:gap-2 ${
-                      darkMode
-                        ? "text-gray-100 hover:bg-sky-400/20 border-2 border-sky-700 hover:border-sky-600"
-                        : "text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300"
-                    }`}
+                    className="rounded-xl px-2 sm:px-4 py-2 sm:py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 border-2 border-gray-200 hover:border-gray-300 dark:text-gray-200 dark:hover:bg-gray-800 dark:border-gray-700 dark:hover:border-gray-600 transition-all duration-200 flex items-center gap-1 sm:gap-2"
                 >
                   <span className="hidden sm:inline">Next</span>
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -672,11 +574,7 @@ const EventsScreen = () => {
               <div className="grid grid-cols-7 mb-2 sm:mb-4">
                 {WEEKDAY_LABELS.map((label) => (
                     <div key={label} className="text-center">
-                      <span className={`text-[10px] sm:text-xs font-bold tracking-wider px-1.5 sm:px-3 py-1 rounded-full inline-block transition-colors duration-200 ${
-                        darkMode
-                          ? "text-sky-300 bg-blue-900/60"
-                          : "text-gray-500 bg-gray-100/80"
-                      }`}>
+                      <span className="text-[10px] sm:text-xs font-bold tracking-wider text-gray-500 bg-gray-100/80 px-1.5 sm:px-3 py-1 rounded-full inline-block dark:text-gray-300 dark:bg-gray-800/60 transition-colors duration-200">
                         {label.charAt(0)}
                         <span className="hidden sm:inline">{label.slice(1)}</span>
                       </span>
@@ -693,17 +591,13 @@ const EventsScreen = () => {
                           <div
                               key={`${weekIndex}-${dayIndex}`}
                               className={`group min-h-[80px] sm:min-h-[140px] rounded-lg sm:rounded-xl p-1.5 sm:p-3 text-left transition-all duration-200 ${
-                                  darkMode
-                                    ? day.isCurrentMonth
-                                        ? "bg-gradient-to-br from-blue-900/70 to-teal-900/70 backdrop-blur-sm shadow-sm hover:shadow-md text-gray-100 hover:from-blue-800/70 hover:to-teal-800/70"
-                                        : "bg-gradient-to-br from-blue-950/40 to-teal-950/40 text-gray-500"
-                                    : day.isCurrentMonth
-                                        ? "bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md"
-                                        : "bg-gray-50/80 text-gray-400"
+                                  day.isCurrentMonth
+                                      ? "bg-white/90 backdrop-blur-sm shadow-sm hover:shadow-md dark:bg-gray-950/70 dark:text-gray-100 dark:hover:bg-gray-950"
+                                      : "bg-gray-50/80 text-gray-400 dark:bg-gray-900/40 dark:text-gray-500"
                               } ${
                                   isToday 
-                                      ? `ring-1 sm:ring-2 shadow-lg ${darkMode ? "ring-sky-400/60" : "ring-blue-400"}` 
-                                      : `border ${darkMode ? "border-blue-800/50" : "border-gray-100"}`
+                                      ? "ring-1 sm:ring-2 ring-blue-400 shadow-lg dark:ring-blue-400/60" 
+                                      : "border border-gray-100 dark:border-gray-700"
                               } ${
                                   day.events.length 
                                       ? "cursor-pointer hover:-translate-y-0.5 sm:hover:-translate-y-1 hover:shadow-lg" 
@@ -723,7 +617,7 @@ const EventsScreen = () => {
                             <div className="mb-1 sm:mb-2 flex items-center justify-between">
                               <span className={`flex h-6 w-6 sm:h-8 sm:w-8 items-center justify-center rounded-full font-semibold text-xs sm:text-sm
                                 ${isToday 
-                                  ? "bg-gradient-to-r from-teal-400 via-sky-400 to-indigo-400 text-white shadow-md dark:from-teal-500 dark:via-sky-500 dark:to-indigo-500" 
+                                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md dark:from-blue-500 dark:to-indigo-500" 
                                   : day.isCurrentMonth 
                                     ? "bg-white text-gray-700 group-hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:group-hover:bg-gray-700" 
                                     : "bg-gray-100 text-gray-400 dark:bg-gray-800/70 dark:text-gray-500"
@@ -750,16 +644,12 @@ const EventsScreen = () => {
                                         navigate(`/events/${event.event_id}`);
                                       }}
                                       onKeyDown={(keyEvent) => keyEvent.stopPropagation()}
-                                      className="flex flex-col gap-0.5 rounded-lg bg-gradient-to-r from-teal-50 via-sky-50 to-indigo-50 p-1 sm:p-2 text-left hover:from-teal-100 hover:via-sky-100 hover:to-indigo-100 dark:from-teal-900/40 dark:via-sky-900/40 dark:to-indigo-900/40 dark:hover:from-teal-800/60 dark:hover:via-sky-800/60 dark:hover:to-indigo-800/60 transition-all duration-200"
+                                      className="flex flex-col gap-0.5 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 p-1 sm:p-2 text-left hover:from-blue-100 hover:to-indigo-100 dark:from-blue-900/40 dark:to-indigo-900/40 dark:hover:from-blue-800/60 dark:hover:to-indigo-800/60 transition-all duration-200"
                                   >
-                                    <span className={`font-semibold text-[10px] sm:text-xs truncate transition-colors duration-200 ${
-                                      darkMode ? "text-sky-300" : "text-blue-800"
-                                    }`}>
+                                    <span className="font-semibold text-[10px] sm:text-xs text-blue-800 dark:text-blue-200 truncate transition-colors duration-200">
                                       {event.event_title}
                                     </span>
-                                    <span className={`hidden sm:flex text-[10px] items-center gap-1 transition-colors duration-200 ${
-                                      darkMode ? "text-sky-200" : "text-blue-600"
-                                    }`}>
+                                    <span className="hidden sm:flex text-[10px] text-blue-600 dark:text-blue-300 items-center gap-1 transition-colors duration-200">
                                       <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                           d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
