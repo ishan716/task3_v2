@@ -1,44 +1,50 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiJSON } from "../src/api.js";
 
-const DEMO_USER_ID = (import.meta.env.VITE_DEMO_USER_ID || "").trim();
+// 🪷 Automatically attach logged-in userId to API requests
 const withUserQuery = (path) => {
-  if (!DEMO_USER_ID) return path;
-  const query = `userId=${encodeURIComponent(DEMO_USER_ID)}`;
+  const userId = localStorage.getItem("user_id"); // 👈 gets from login
+  if (!userId) return path;
+  const query = `userId=${encodeURIComponent(userId)}`;
   return path.includes("?") ? `${path}&${query}` : `${path}?${query}`;
 };
 
 export default function NotificationsPanel() {
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
 
-  // 🌼 Load notifications when the component mounts
+  // 🔹 Load notifications on mount
   useEffect(() => {
     fetchNotifications();
   }, []);
 
   const fetchNotifications = async () => {
     try {
-      const data = await apiGet(withUserQuery("/api/notifications"));
-      setNotifications(data || []);
+      const payload = await apiGet(withUserQuery("/api/notifications"));
+      const items = payload?.items || [];
+      setNotifications(items);
+      setUnreadCount(payload.unseen_count || 0);
+      console.log("✅ Notifications loaded:", items);
     } catch (err) {
-      console.error("Failed to load notifications", err);
+      console.error("❌ Failed to load notifications", err);
     }
   };
 
-  // 🌷 Mark notification as read (only for this user)
+  // 🔹 Mark a notification as read
   const markAsRead = async (id) => {
     try {
       await apiJSON("PATCH", withUserQuery(`/api/notifications/${id}/read`));
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+        prev.map((n) =>
+          n.id === id ? { ...n, is_read: true, seen_at: new Date().toISOString() } : n
+        )
       );
+      setUnreadCount((prev) => Math.max(prev - 1, 0));
     } catch (err) {
-      console.error("Failed to mark notification as read", err);
+      console.error("❌ Failed to mark notification as read", err);
     }
   };
-
-  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
     <div className="relative">
@@ -67,7 +73,7 @@ export default function NotificationsPanel() {
         )}
       </button>
 
-      {/* 💌 Dropdown Panel */}
+      {/* 📋 Notification Dropdown */}
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
@@ -84,19 +90,24 @@ export default function NotificationsPanel() {
                     : "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40"
                 } transition-colors`}
               >
-                <p className="font-semibold text-gray-800 dark:text-gray-100">
-                  {n.title}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {n.message}
-                </p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</p>
+                  <span
+                    className={`text-xs font-semibold ${
+                      n.is_read ? "text-gray-500" : "text-green-600"
+                    }`}
+                  >
+                    {n.is_read ? "Seen" : "New"}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{n.message}</p>
                 {n.link && (
                   <a
                     href={n.link}
                     onClick={() => markAsRead(n.id)}
                     className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                   >
-                    View →
+                    View details
                   </a>
                 )}
               </div>
