@@ -386,67 +386,123 @@ const EventsScreen = () => {
             </button>
 
 
-            <div className="relative md:ml-auto">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                aria-label="Menu"
-              >
-                <svg className="w-6 h-6 text-gray-700 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                </svg>
-              </button>
+              <div className="relative md:ml-auto">
+                <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    aria-label="Menu"
+                >
+                  <svg
+                      className="w-6 h-6 text-gray-700 dark:text-gray-200"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                  >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </button>
 
-              {isDropdownOpen && (
-                <>
-                  <div 
-                    className="fixed inset-0 z-10"
-                    onClick={() => setIsDropdownOpen(false)}
-                  ></div>
-                  <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 z-20">
-                    <div className="py-1">
-                      <button
-                        onClick={() => {
-                          navigate("/recommended");
-                          setIsDropdownOpen(false);
-                        }}
-                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        Recommended Events
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditInterestsOpen(true);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                        </svg>
-                        Edit Interests
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsMyEventsOpen(true);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-                      >
-                        <svg className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                        My Events
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+                {isDropdownOpen && (
+                    <>
+                      <div
+                          className="fixed inset-0 z-10"
+                          onClick={() => setIsDropdownOpen(false)}
+                      ></div>
+
+                      <div className="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 z-20">
+                        <div className="py-1">
+                          {/* Recommended Events */}
+                          <button
+                              onClick={() => {
+                                navigate("/recommended");
+                                setIsDropdownOpen(false);
+                              }}
+                              className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <svg
+                                className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            Recommended Events
+                          </button>
+
+                          {/* Edit Interests */}
+                          <button
+                              onClick={() => {
+                                setIsEditInterestsOpen(true);
+                                setIsDropdownOpen(false);
+                              }}
+                              className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <svg
+                                className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                            Edit Interests
+                          </button>
+
+                          {/* My Events */}
+                          <button
+                              onClick={() => {
+                                setIsMyEventsOpen(true);
+                                setIsDropdownOpen(false);
+                              }}
+                              className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <svg
+                                className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                              <path
+                                  fillRule="evenodd"
+                                  d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                                  clipRule="evenodd"
+                              />
+                            </svg>
+                            My Events
+                          </button>
+
+                          {/* 🚀 Logout Button */}
+                          <button
+                              onClick={() => {
+                                localStorage.removeItem("accessToken");
+                                setIsDropdownOpen(false);
+                                navigate("/login");
+                              }}
+                              className="group flex w-full items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          >
+                            <svg
+                                className="mr-3 h-5 w-5 text-red-500 group-hover:text-red-600"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                            >
+                              <path
+                                  fillRule="evenodd"
+                                  d="M3 10a1 1 0 011-1h8V6a1 1 0 011.707-.707l4 4a1 1 0 010 1.414l-4 4A1 1 0 0112 14v-3H4a1 1 0 01-1-1z"
+                                  clipRule="evenodd"
+                              />
+                            </svg>
+                            Logout
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                )}
+              </div>
+
             </div>
-          </div>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="inline-flex overflow-hidden rounded-lg border border-purple-200 bg-white/80 backdrop-blur-sm shadow-sm dark:border-purple-800 dark:bg-gray-800/80 dark:shadow-lg transition-all duration-200">
