@@ -1,49 +1,53 @@
 const supabase = require("../db");
 
 /**
- * 🌼 Creates a notification visible to all users.
- * 1️⃣ Inserts one record in `notifications`
+ * 🌼 Create a global notification visible to all users
+ * ----------------------------------------------------
+ * 1️⃣ Inserts a new record into `notifications`
  * 2️⃣ Creates individual unread entries in `user_notifications`
  */
 async function createNotificationForAllUsers(title, message, link = null) {
   try {
-    // 1️⃣ Insert into main notifications table
+    // 🔹 Step 1: Insert notification into main table
     const { data: notif, error: notifError } = await supabase
       .from("notifications")
       .insert([{ title, message, link }])
-      .select("*")
+      .select("id, title, message, link, created_at")
       .single();
 
     if (notifError) throw notifError;
 
-    // 2️⃣ Get all users from the users table
+    console.log(`✅ Notification created: "${notif.title}" (ID: ${notif.id})`);
+
+    // 🔹 Step 2: Fetch all users (user_id)
     const { data: users, error: userError } = await supabase
       .from("users")
       .select("user_id");
 
     if (userError) throw userError;
-
     if (!users || users.length === 0) {
-      console.warn("⚠️ No users found to send notification.");
+      console.warn("⚠️ No users found to send notifications.");
       return;
     }
 
-    // 3️⃣ Create one user_notifications row per user
-    const entries = users.map((u) => ({
+    // 🔹 Step 3: Prepare user-specific notification entries
+    const userEntries = users.map((u) => ({
       user_id: u.user_id,
       notification_id: notif.id,
       is_read: false,
+      seen_at: null,
     }));
 
+    // 🔹 Step 4: Bulk insert into user_notifications
     const { error: insertError } = await supabase
       .from("user_notifications")
-      .insert(entries);
+      .insert(userEntries);
 
     if (insertError) throw insertError;
 
-    console.log(`🔔 Notification "${title}" sent to ${users.length} users`);
+    console.log(`🔔 Notification "${notif.title}" sent to ${users.length} users.`);
   } catch (err) {
-    console.error("❌ Error creating notification:", err.message);
+    console.error("❌ Error creating notification for all users:", err.message);
   }
 }
 

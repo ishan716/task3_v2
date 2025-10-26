@@ -30,12 +30,19 @@ export default function LoginPage() {
       };
 
       const res = await apiJSON("POST", path, payload);
-      const token = res?.token;
-      if (token) localStorage.setItem("accessToken", token);
-      // Optionally store user info if needed
-      // if (res?.user) localStorage.setItem("user", JSON.stringify(res.user));
+const token = res?.token;
+if (token) localStorage.setItem("accessToken", token);
 
-      navigate("/", { replace: true });
+// ✅ Save user_id correctly no matter backend structure
+const userId = res?.user_id || res?.user?.user_id;
+if (userId) {
+  localStorage.setItem("user_id", userId);
+  console.log("✅ Logged in user ID saved:", userId);
+}
+
+navigate("/", { replace: true });
+
+
     } catch (err) {
       setError("Authentication failed. Please check details and try again.");
     } finally {
