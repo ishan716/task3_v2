@@ -17,7 +17,7 @@ const ratingsRoutes = require("./routes/ratings.routes");
 const eventListRoutes = require("./routes/eventlist.routes");
 
 const interestsRouter = require("./routes/interests.routes");
-
+const userAuthRoutes = require("./routes/auth/userAuthRoutes");
 const userinterestsRouter = require("./routes/userinterests.routes");
 const adminRoutes = require("./routes/admin.routes");
 
@@ -76,6 +76,7 @@ app.use("/api", eventRoutes); // includes /events/:id and related
 
 app.use("/api/interests", userinterestsRouter);
 app.use("/api/admin", adminRoutes);
+app.use("/api/auth", userAuthRoutes);
 
 
 
