@@ -1,0 +1,5 @@
+- [x] Plan enhancements for admin analytics view
+- [x] Implement backend analytics summary endpoint under `/api/admin/analytics`
+- [x] Update frontend analytics page to consume new endpoint and render charts/metrics
+- [ ] Add backend tests or manual verification notes
+- [ ] Document run instructions in README or response

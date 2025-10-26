@@ -1,54 +1,96 @@
 const express = require("express");
-const supabase = require("../db"); // ✅ use supabase, not pool
-const router = express.Router();
-const { createNotification } = require("../untils/notify"); // ✅ corrected path (utils not untils)
+const supabase = require("../db");
+const { createNotificationForAllUsers } = require("../untils/notify"); // ✅ make sure path is correct
 
-// 🔹 Get all notifications (public/system for now)
+const router = express.Router();
+
+function resolveNumericUserId(req) {
+  const raw = (req.query?.userId ?? req.cookies?.userId ?? "").toString().trim();
+  if (!raw) return null;
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+/* -------------------------------------------
+ 🌸  GET — Fetch notifications for a specific user
+-------------------------------------------- */
 router.get("/", async (req, res) => {
   try {
+    const user_id = resolveNumericUserId(req);
+    if (!user_id) return res.json([]);
+
     const { data, error } = await supabase
-      .from("notifications")
-      .select("*")
-      .or("user_id.eq.system,user_id.is.null")
-      .order("created_at", { ascending: false });
+      .from("user_notifications")
+      .select(
+        `
+        id,
+        is_read,
+        seen_at,
+        notifications (
+          id,
+          title,
+          message,
+          link,
+          created_at
+        )
+      `
+      )
+      .eq("user_id", user_id)
+      .order("notifications(created_at)", { ascending: false });
 
     if (error) throw error;
-    res.json(data || []);
+
+    const formatted = (data || []).map((row) => ({
+      id: row.notifications.id,
+      title: row.notifications.title,
+      message: row.notifications.message,
+      link: row.notifications.link,
+      created_at: row.notifications.created_at,
+      is_read: row.is_read,
+    }));
+
+    res.json(formatted);
   } catch (err) {
     console.error("❌ Error fetching notifications:", err.message);
     res.status(500).json({ error: "Failed to fetch notifications" });
   }
 });
 
-// 🔹 Create a new notification
+/* -------------------------------------------
+ 🌼  POST — Create new notification for all users
+ (For admin use)
+-------------------------------------------- */
 router.post("/", async (req, res) => {
   try {
-    const { user_id, title, message, link } = req.body;
+    const { title, message, link } = req.body;
+    if (!title || !message)
+      return res.status(400).json({ error: "title and message required" });
 
-    const { data, error } = await supabase
-      .from("notifications")
-      .insert([{ user_id, title, message, link }])
-      .select("*")
-      .single();
-
-    if (error) throw error;
-
-    res.status(201).json(data);
+    await createNotificationForAllUsers(title, message, link);
+    res.status(201).json({ success: true, message: "Notification sent to all users" });
   } catch (err) {
     console.error("❌ Error creating notification:", err.message);
     res.status(500).json({ error: "Failed to create notification" });
   }
 });
 
-// 🔹 Mark notification as read
+/* -------------------------------------------
+ 🌻  PATCH — Mark a notification as read
+ (specific to logged-in user)
+-------------------------------------------- */
 router.patch("/:id/read", async (req, res) => {
   try {
-    const { id } = req.params;
+    const user_id = resolveNumericUserId(req);
+    const notification_id = req.params.id;
+
+    if (!user_id) return res.status(401).json({ error: "Valid numeric userId is required" });
 
     const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", id);
+      .from("user_notifications")
+      .update({ is_read: true, seen_at: new Date().toISOString() })
+      .eq("user_id", user_id)
+      .eq("notification_id", notification_id);
 
     if (error) throw error;
 
