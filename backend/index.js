@@ -49,7 +49,7 @@ app.use((req, res, next) => {
     }
     next();
 });
-app.use("/api/notifications", notificationsRouter);
+
 // ------------------- TEST ROUTE -------------------
 app.get("/", async (req, res) => {
     try {
@@ -76,6 +76,7 @@ app.use("/api", eventRoutes); // includes /events/:id and related
 
 app.use("/api/interests", userinterestsRouter);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationsRouter);
 
 
 
