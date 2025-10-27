@@ -149,22 +149,7 @@ const loginAdmin = async (req, res) => {
   }
 };
 
-// ================= VERIFY ADMIN TOKEN ==================
-const verifyAdminToken = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(403).json({ message: 'Token required' });
 
-  try {
-    const decoded = jwt.verify(token, getJwtSecret());
-    if (decoded?.role !== 'admin') {
-      return res.status(403).json({ message: 'Admin access required' });
-    }
-    req.admin = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ message: 'Invalid token' });
-  }
-};
 
-module.exports = { registerAdmin, loginAdmin, verifyAdminToken };
+module.exports = { registerAdmin, loginAdmin};
 
