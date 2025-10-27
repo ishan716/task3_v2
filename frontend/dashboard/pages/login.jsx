@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { apiJSON } from "../src/api";
 
 export default function LoginPage() {
@@ -138,9 +138,13 @@ navigate("/", { replace: true });
               Already have an account? Sign in
             </button>
           )}
+          <div className="mt-2">
+            <Link to="/admin/login" className="text-blue-600 hover:underline">
+              Are you an admin? Sign in here
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
