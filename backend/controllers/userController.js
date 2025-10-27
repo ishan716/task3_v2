@@ -145,19 +145,6 @@ const loginUser = async (req, res) => {
     }
 };
 
-// ================= VERIFY TOKEN ==================
-const verifyToken = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token)
-        return res.status(403).json({ message: "Token required" });
 
-    try {
-        const decoded = jwt.verify(token, getJwtSecret());
-        req.user = decoded; // includes role now
-        next();
-    } catch (err) {
-        res.status(401).json({ message: "Invalid token" });
-    }
-};
 
-module.exports = { registerUser, loginUser, verifyToken };
+module.exports = { registerUser, loginUser};

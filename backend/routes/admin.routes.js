@@ -1,8 +1,12 @@
 const express = require("express");
 const supabase = require("../db");
 const { createNotificationForAllUsers } = require("../untils/notify");
+const verifyAdminToken = require("../middlewares/verifyAdmin");
 
 const router = express.Router();
+
+// Protect all admin routes
+router.use(verifyAdminToken);
 
 function computeEventStatus(event) {
     const now = Date.now();
