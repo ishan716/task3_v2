@@ -3,6 +3,10 @@ import { Star, Send, Trash2 } from "lucide-react";
 
 export default function FeedbackCard({ eventId }) {
   const API = useMemo(() => import.meta.env.VITE_API_URL || "", []);
+  const authHeaders = useMemo(() => {
+    const token = localStorage.getItem("accessToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }, []);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,6 +20,7 @@ export default function FeedbackCard({ eventId }) {
     try {
       const sumRes = await fetch(`${API}/api/events/${eventId}/ratings/summary`, {
         credentials: "include",
+        headers: { ...authHeaders },
       });
       if (sumRes.ok) {
         const data = await sumRes.json();
@@ -31,12 +36,15 @@ export default function FeedbackCard({ eventId }) {
     try {
       const meRes = await fetch(`${API}/api/events/${eventId}/ratings/me`, {
         credentials: "include",
+        headers: { ...authHeaders },
       });
       if (meRes.status === 200) {
         const me = await meRes.json();
         setMine(me);
         setRating(me.rating ?? 0);
         setFeedback(me.comment ?? "");
+      } else if (meRes.status === 204) {
+        setMine(null);
       }
     } catch (e) {
       console.error("Failed to fetch my rating:", e);
@@ -56,15 +64,9 @@ export default function FeedbackCard({ eventId }) {
     setError("");
 
     try {
-      console.log("Submitting feedback:", {
-        url: `${API}/api/events/${eventId}/ratings`,
-        rating,
-        feedback,
-      });
-
       const res = await fetch(`${API}/api/events/${eventId}/ratings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders },
         credentials: "include",
         body: JSON.stringify({ rating, comment: feedback }),
       });
@@ -90,8 +92,9 @@ export default function FeedbackCard({ eventId }) {
       const res = await fetch(`${API}/api/events/${eventId}/ratings/me`, {
         method: "DELETE",
         credentials: "include",
+        headers: { ...authHeaders },
       });
-      if (!res.ok) throw new Error("Failed to delete rating");
+      if (!res.ok && res.status !== 204) throw new Error("Failed to delete rating");
 
       setMine(null);
       setRating(0);
