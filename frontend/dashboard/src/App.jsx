@@ -7,6 +7,7 @@ import AdminDashboard from "./pages/AdminDashboard.jsx";
 import AdminAnalytics from "./pages/AdminAnalytics.jsx";
 import LoginPage from "../pages/login.jsx";
 import ProtectedRoute from "../components/protectedRoute.jsx";
+import AdminLoginPage from "../pages/adminlogin.jsx";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
 
           {/* ✅ Protected user routes */}
           <Route element={<ProtectedRoute allowedRoles={['user']} />}>
@@ -24,8 +26,10 @@ export default function App() {
           </Route>
 
           {/* Admin routes (not wrapped here yet) */}
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />} >
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/analytics" element={<AdminAnalytics />} />
+        </Route>
         </Routes>
       </div>
   );
