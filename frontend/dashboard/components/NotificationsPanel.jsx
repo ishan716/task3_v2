@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiJSON } from "../src/api.js";
 
-// 🪷 Automatically attach logged-in userId to API requests
+// Automatically attach logged-in userId to API requests
 const withUserQuery = (path) => {
   const userId = localStorage.getItem("user_id"); // 👈 gets from login
   if (!userId) return path;
@@ -14,7 +14,7 @@ export default function NotificationsPanel() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
 
-  // 🔹 Load notifications on mount
+  //  Load notifications on mount
   useEffect(() => {
     fetchNotifications();
   }, []);
@@ -31,7 +31,7 @@ export default function NotificationsPanel() {
     }
   };
 
-  // 🔹 Mark a notification as read
+  // Mark a notification as read
   const markAsRead = async (id) => {
     try {
       await apiJSON("PATCH", withUserQuery(`/api/notifications/${id}/read`));
@@ -54,7 +54,7 @@ export default function NotificationsPanel() {
         className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       >
         <svg
-          className="w-6 h-6 text-gray-700 dark:text-gray-200"
+          className="w-6 h-6 text-gray-700 dark:text-yellow-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -73,7 +73,7 @@ export default function NotificationsPanel() {
         )}
       </button>
 
-      {/* 📋 Notification Dropdown */}
+      {/*  Notification Dropdown */}
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
