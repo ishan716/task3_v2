@@ -11,11 +11,19 @@ export default function FeedbackCard({ eventId }) {
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
 
+  const authHeaders = () => {
+    const token = localStorage.getItem("accessToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const fetchSummary = async () => {
     if (!eventId) return;
     try {
       const sumRes = await fetch(`${API}/api/events/${eventId}/ratings/summary`, {
         credentials: "include",
+        headers: {
+          ...authHeaders(),
+        },
       });
       if (sumRes.ok) {
         const data = await sumRes.json();
@@ -28,15 +36,29 @@ export default function FeedbackCard({ eventId }) {
 
   const fetchMine = async () => {
     if (!eventId) return;
+    const headers = authHeaders();
+    if (!headers.Authorization) {
+      setMine(null);
+      return;
+    }
     try {
       const meRes = await fetch(`${API}/api/events/${eventId}/ratings/me`, {
         credentials: "include",
+        headers,
       });
       if (meRes.status === 200) {
         const me = await meRes.json();
         setMine(me);
         setRating(me.rating ?? 0);
         setFeedback(me.comment ?? "");
+        setError("");
+      } else if (meRes.status === 204) {
+        setMine(null);
+        setRating(0);
+        setFeedback("");
+        setError("");
+      } else if (meRes.status === 401) {
+        setError("Please sign in to view your feedback.");
       }
     } catch (e) {
       console.error("Failed to fetch my rating:", e);
@@ -52,19 +74,23 @@ export default function FeedbackCard({ eventId }) {
     if (!eventId) return setError("Missing event id");
     if (!feedback.trim() && rating === 0) return;
 
+    const headers = {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    };
+
+    if (!headers.Authorization) {
+      setError("Please sign in to submit feedback.");
+      return;
+    }
+
     setIsSubmitting(true);
     setError("");
 
     try {
-      console.log("Submitting feedback:", {
-        url: `${API}/api/events/${eventId}/ratings`,
-        rating,
-        feedback,
-      });
-
       const res = await fetch(`${API}/api/events/${eventId}/ratings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify({ rating, comment: feedback }),
       });
@@ -86,12 +112,18 @@ export default function FeedbackCard({ eventId }) {
 
   const handleDelete = async () => {
     if (!eventId) return;
+    const headers = authHeaders();
+    if (!headers.Authorization) {
+      setError("Please sign in to manage your feedback.");
+      return;
+    }
     try {
       const res = await fetch(`${API}/api/events/${eventId}/ratings/me`, {
         method: "DELETE",
         credentials: "include",
+        headers,
       });
-      if (!res.ok) throw new Error("Failed to delete rating");
+      if (!res.ok && res.status !== 204) throw new Error("Failed to delete rating");
 
       setMine(null);
       setRating(0);

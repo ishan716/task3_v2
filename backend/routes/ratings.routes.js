@@ -1,29 +1,19 @@
 // backend/ratings.routes.js (CommonJS to match your db.js)
 const express = require("express");
-const cookieParser = require("cookie-parser");
 const { randomUUID } = require("crypto");
 const supabase = require("../db"); // <- your existing db.js
+const verifyToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
 
-router.use(cookieParser());
-
-// anonymous identity via cookie (no login)
-router.use((req, res, next) => {
-  const name = "visitorId";
-  let id = req.cookies?.[name];
-  if (!id) {
-    id = randomUUID();
-    res.cookie(name, id, {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 365
-    });
+function requireUserId(req, res) {
+  const userId = req.user?.user_id;
+  if (!userId) {
+    res.status(401).json({ error: "Authentication required" });
+    return null;
   }
-  req.visitorId = id;
-  next();
-});
+  return userId;
+}
 
 // helper: safely parse text_content to rating object or null
 function parseRatingRow(row) {
@@ -32,12 +22,13 @@ function parseRatingRow(row) {
     if (!obj || obj.type !== "rating") return null;
     const r = Number(obj.rating);
     if (![1,2,3,4,5].includes(r)) return null;
+    const owner = obj.user_id ?? obj.visitor ?? obj.userId ?? null;
     return {
       feedback_id: row.feedback_id,
       event_id: row.event_id,
       rating: r,
       comment: obj.comment ?? null,
-      visitor: obj.visitor || null,
+      user_id: owner,
       created_at: row.created_at
     };
   } catch {
@@ -46,7 +37,7 @@ function parseRatingRow(row) {
 }
 
 // ----------------- POST /events/:eventId/ratings -----------------
-router.post("/events/:eventId/ratings", async (req, res) => {
+router.post("/events/:eventId/ratings", verifyToken, async (req, res) => {
   const { eventId } = req.params;
   const { rating, comment } = req.body || {};
   const r = Number(rating);
@@ -54,9 +45,12 @@ router.post("/events/:eventId/ratings", async (req, res) => {
     return res.status(400).json({ error: "rating must be 1..5" });
   }
 
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   const payload = {
     type: "rating",
-    visitor: req.visitorId,
+    user_id: userId,
     rating: r,
     comment: comment ?? null
   };
@@ -74,7 +68,8 @@ router.post("/events/:eventId/ratings", async (req, res) => {
     const mine = (rows || [])
       .map(parseRatingRow)
       .filter(Boolean)
-      .filter(x => x.visitor === req.visitorId);
+      .filter(x => x.user_id !== null)
+      .filter(x => String(x.user_id) === String(userId));
 
     // 3) delete old ones (idempotent upsert)
     if (mine.length) {
@@ -108,8 +103,11 @@ router.post("/events/:eventId/ratings", async (req, res) => {
 });
 
 // ----------------- GET /events/:eventId/ratings/me -----------------
-router.get("/events/:eventId/ratings/me", async (req, res) => {
+router.get("/events/:eventId/ratings/me", verifyToken, async (req, res) => {
   const { eventId } = req.params;
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   try {
     const { data: rows, error } = await supabase
       .from("feedback")
@@ -121,7 +119,8 @@ router.get("/events/:eventId/ratings/me", async (req, res) => {
     const mine = (rows || [])
       .map(parseRatingRow)
       .filter(Boolean)
-      .filter(x => x.visitor === req.visitorId)
+      .filter(x => x.user_id !== null)
+      .filter(x => String(x.user_id) === String(userId))
       .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     if (!mine.length) return res.status(204).end();
@@ -165,8 +164,11 @@ router.get("/events/:eventId/ratings/summary", async (req, res) => {
 });
 
 // ----------------- DELETE /events/:eventId/ratings/me -----------------
-router.delete("/events/:eventId/ratings/me", async (req, res) => {
+router.delete("/events/:eventId/ratings/me", verifyToken, async (req, res) => {
   const { eventId } = req.params;
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   try {
     const { data: rows, error } = await supabase
       .from("feedback")
@@ -178,7 +180,8 @@ router.delete("/events/:eventId/ratings/me", async (req, res) => {
     const mine = (rows || [])
       .map(parseRatingRow)
       .filter(Boolean)
-      .filter(x => x.visitor === req.visitorId);
+      .filter(x => x.user_id !== null)
+      .filter(x => String(x.user_id) === String(userId));
 
     if (!mine.length) return res.status(204).end();
 
