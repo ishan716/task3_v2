@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "kill-port 3000 && nodemon index.js",
+    "dev": "nodemon index.js",
     "test": "jest --runInBand"
   },
   "keywords": [],
