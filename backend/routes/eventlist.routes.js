@@ -1,8 +1,10 @@
 // backend/routes/events.routes.js
 const express = require('express');
 const supabase = require('../db');
+const verifyUserToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
+router.use(verifyUserToken);
 
 // GET /api/events -> list all events with their categories
 router.get('/', async (req, res) => {

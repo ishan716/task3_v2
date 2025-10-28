@@ -3,7 +3,7 @@ const supabase = require("../db");
 const verifyToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
-
+router.use(verifyToken);
 function requireUserId(req, res) {
   const userId = req.user?.user_id;
   if (!userId) {

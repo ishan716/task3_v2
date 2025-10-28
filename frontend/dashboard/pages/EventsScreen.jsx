@@ -35,6 +35,13 @@ const EventsScreen = () => {
     return localStorage.getItem("darkMode") === "true";
   });
 
+
+  function authHeaders() {
+    const token = localStorage.getItem("accessToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+
   useEffect(() => {
     // Keep the root element in sync so Tailwind's `dark:` classes activate immediately
     const root = window.document.documentElement;
@@ -158,6 +165,7 @@ const EventsScreen = () => {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/events`, {
         credentials: "include",
+        headers: {...authHeaders(),}
       });
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
@@ -170,6 +178,9 @@ const EventsScreen = () => {
               try {
                 const r = await fetch(`${API_BASE_URL}/api/interested/status/${e.event_id}`, {
                   credentials: "include",
+                  headers: {
+                    ...authHeaders(),
+                  },
                 });
                 if (!r.ok) return [e.event_id, false];
                 const j = await r.json();
@@ -215,7 +226,7 @@ const EventsScreen = () => {
       const method = next ? "POST" : "DELETE";
       const r = await fetch(`${API_BASE_URL}/api/interested`, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         credentials: "include",
         body: JSON.stringify({ event_id: id }),
       });

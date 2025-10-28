@@ -1,6 +1,9 @@
 ﻿import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-
+function authHeaders() {
+  const token = localStorage.getItem("accessToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 const RecommendedEvents = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +33,7 @@ const RecommendedEvents = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${API_BASE_URL}/api/events/recommended`, { credentials: "include" });
+      const res = await fetch(`${API_BASE_URL}/api/events/recommended`, { credentials: "include",headers:{...authHeaders()}});
       if (!res.ok) throw new Error(`Request failed: ${res.status}`);
       const json = await res.json();
       setItems(Array.isArray(json.items) ? json.items : []);

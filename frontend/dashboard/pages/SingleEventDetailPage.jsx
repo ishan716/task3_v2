@@ -26,6 +26,12 @@ export default function SingleEventDetailPage() {
 
     const interestedReqIdRef = useRef(0);
 
+
+    function authHeaders() {
+        const token = localStorage.getItem("accessToken");
+        return token ? { Authorization: `Bearer ${token}` } : {};
+    }
+
     // Fetch event details
     useEffect(() => {
         if (eventId == null) {
@@ -42,6 +48,7 @@ export default function SingleEventDetailPage() {
                 const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
                     credentials: 'include',
                     signal: controller.signal,
+                    headers: {...authHeaders()},
                 });
                 if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
                 const data = await response.json();
@@ -70,6 +77,7 @@ export default function SingleEventDetailPage() {
                 const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/status`, {
                     credentials: 'include',
                     signal: controller.signal,
+                    headers: {...authHeaders()},
                 });
                 if (!response.ok) return;
                 const data = await response.json();
@@ -93,6 +101,7 @@ export default function SingleEventDetailPage() {
                 const resp = await fetch(`${API_BASE_URL}/api/interested/status/${eventId}`, {
                     credentials: 'include',
                     signal: controller.signal,
+                    headers: {...authHeaders()},
                 });
                 if (!resp.ok) return;
                 const json = await resp.json();
@@ -157,7 +166,7 @@ export default function SingleEventDetailPage() {
             if (nextInterested) {
                 const resp = await fetch(`${API_BASE_URL}/api/interested`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json',...authHeaders() },
                     credentials: 'include',
                     body: JSON.stringify({ event_id: eventId }),
                 });
@@ -170,7 +179,7 @@ export default function SingleEventDetailPage() {
             } else {
                 const resp = await fetch(`${API_BASE_URL}/api/interested`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json',...authHeaders() },
                     credentials: 'include',
                     body: JSON.stringify({ event_id: eventId }),
                 });

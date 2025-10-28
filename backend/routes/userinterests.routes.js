@@ -3,10 +3,11 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const { randomUUID } = require("crypto");
 const supabase = require("../db");
+const verifyUserToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
 const COOKIE_NAME = "userId";
-
+router.use(verifyUserToken);
 // cookie attach
 router.use(cookieParser());
 router.use((req, res, next) => {

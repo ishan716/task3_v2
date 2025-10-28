@@ -1,9 +1,10 @@
 // backend/routes/events.routes.js
 const express = require("express");
 const supabase = require("../db");
+const verifyUserToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
-
+router.use(verifyUserToken);
 const fieldMap = {
     title: "event_title",
     description: "description",
