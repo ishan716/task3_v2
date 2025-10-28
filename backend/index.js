@@ -1,4 +1,6 @@
 const express = require("express");
+// Start periodic event sync
+require("./fetchAndSyncEvents");
 const cookieParser = require("cookie-parser");
 const { v4: uuidv4 } = require("uuid");
 const supabase = require("./db");
