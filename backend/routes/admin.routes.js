@@ -1,6 +1,6 @@
 const express = require("express");
 const supabase = require("../db");
-const { createNotificationForAllUsers } = require("../untils/notify");
+const { createNotificationForAllUsers, updateNotificationForLink, deleteNotificationForLink } = require("../untils/notify");
 const verifyAdminToken = require("../middlewares/verifyAdmin");
 
 const router = express.Router();
@@ -707,6 +707,36 @@ router.put("/events/:id", async (req, res) => {
         }
 
         const event = await fetchEvent(eventId);
+
+        if (event) {
+            const trimmedDescription =
+                typeof event.description === "string" ? event.description.trim() : "";
+
+            const notificationMessage =
+                (trimmedDescription && trimmedDescription.slice(0, 160)) ||
+                [
+                    event.location ? `Location: ${event.location}` : null,
+                    event.start_time ? `Starts: ${event.start_time}` : null,
+                    event.end_time ? `Ends: ${event.end_time}` : null,
+                ]
+                    .filter(Boolean)
+                    .join(" | ") ||
+                "Event details have been updated.";
+
+            const updated = await updateNotificationForLink(`/events/${eventId}`, {
+                title: `Updated Event: ${event.event_title || "Event"}`,
+                message: notificationMessage,
+            });
+
+            if (!updated) {
+                await createNotificationForAllUsers(
+                    `Updated Event: ${event.event_title || "Event"}`,
+                    notificationMessage,
+                    `/events/${eventId}`
+                );
+            }
+        }
+
         res.json(event);
     } catch (err) {
         if (err?.code === "PGRST116") {
@@ -724,6 +754,8 @@ router.delete("/events/:id", async (req, res) => {
     }
 
     try {
+        await deleteNotificationForLink(`/events/${eventId}`);
+
         await supabase.from("event_categories").delete().eq("event_id", eventId);
         await supabase.from("interested_events").delete().eq("event_id", eventId);
         await supabase.from("event_photos").delete().eq("event_id", eventId);

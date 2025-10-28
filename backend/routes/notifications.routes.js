@@ -1,6 +1,9 @@
 const express = require("express");
 const supabase = require("../db");
-const { createNotificationForAllUsers } = require("../untils/notify");
+const {
+  createNotificationForAllUsers,
+  deleteNotificationForLink,
+} = require("../untils/notify");
 const verifyToken = require("../middlewares/verifyUser");
 const router = express.Router();
 
@@ -16,6 +19,15 @@ function resolveNumericUserId(req) {
   const parsed = Number(raw);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
   return parsed;
+}
+
+
+function extractEventIdFromLink(link) {
+  if (typeof link !== "string") return null;
+  const match = link.match(/\/events\/(\d+)/);
+  if (!match) return null;
+  const eventId = Number(match[1]);
+  return Number.isInteger(eventId) && eventId > 0 ? eventId : null;
 }
 
 /** 
@@ -50,7 +62,7 @@ router.get("/", async (req, res) => {
     if (error) throw error;
 
     // Map into clean structure for frontend
-    const formatted = (data || []).map((row) => {
+    const mapped = (data || []).map((row) => {
       const n = row.notifications || {};
       const notificationId = row.notification_id || n.id || row.id;
       return {
@@ -66,11 +78,46 @@ router.get("/", async (req, res) => {
       };
     });
 
-    const unseenCount = formatted.filter((n) => !n.is_read).length;
+    const eventIds = new Map();
+    mapped.forEach((n) => {
+      const eventId = extractEventIdFromLink(n.link);
+      if (eventId) {
+        eventIds.set(eventId, n.link);
+      }
+    });
 
-    res.json({ items: formatted, unseen_count: unseenCount });
+    let filtered = mapped;
+
+    if (eventIds.size) {
+      const ids = Array.from(eventIds.keys());
+      const { data: existingEvents, error: fetchEventsError } = await supabase
+        .from("events")
+        .select("event_id")
+        .in("event_id", ids);
+      if (fetchEventsError) throw fetchEventsError;
+
+      const existingSet = new Set((existingEvents || []).map((row) => Number(row.event_id)));
+
+      const staleLinks = new Set();
+      filtered = mapped.filter((n) => {
+        const eventId = extractEventIdFromLink(n.link);
+        if (eventId && !existingSet.has(eventId)) {
+          if (n.link) staleLinks.add(n.link);
+          return false;
+        }
+        return true;
+      });
+
+      for (const link of staleLinks) {
+        await deleteNotificationForLink(link);
+      }
+    }
+
+    const unseenCount = filtered.filter((n) => !n.is_read).length;
+
+    res.json({ items: filtered, unseen_count: unseenCount });
   } catch (err) {
-    console.error("❌ Error fetching notifications:", err.message);
+    console.error("Error fetching notifications:", err.message);
     res.status(500).json({ error: "Failed to fetch notifications" });
   }
 });
@@ -121,6 +168,32 @@ router.patch("/:id/read", async (req, res) => {
   } catch (err) {
     console.error("❌ Error marking notification as read:", err.message);
     res.status(500).json({ error: "Failed to update notification" });
+  }
+});
+
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const user_id = resolveNumericUserId(req);
+    const notification_id = req.params.id;
+
+    if (!user_id) {
+      return res.status(401).json({ error: "Valid numeric userId is required" });
+    }
+
+    const { data, error } = await supabase
+      .from("user_notifications")
+      .delete()
+      .eq("user_id", user_id)
+      .eq("notification_id", notification_id)
+      .select("id");
+
+    if (error) throw error;
+
+    res.json({ success: true, removed: Array.isArray(data) ? data.length : 0 });
+  } catch (err) {
+    console.error("Error deleting notification:", err.message);
+    res.status(500).json({ error: "Failed to delete notification" });
   }
 });
 

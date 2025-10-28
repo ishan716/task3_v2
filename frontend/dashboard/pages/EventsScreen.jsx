@@ -147,6 +147,15 @@ const EventsScreen = () => {
       const data = await apiGet("/api/events");
       setEvents(data || []);
 
+      const currentIds = new Set((data || []).map((e) => e.event_id));
+      setMyEvents((prev) => {
+        const pruned = prev.filter((event) => currentIds.has(event.event_id));
+        if (pruned.length !== prev.length) {
+          localStorage.setItem("myEvents", JSON.stringify(pruned));
+        }
+        return pruned;
+      });
+
       // Load interested status  (promise.all promise all the fetch calls even one fails it says false)
       const userId = localStorage.getItem("user_id");
       if (userId && Array.isArray(data) && data.length) {

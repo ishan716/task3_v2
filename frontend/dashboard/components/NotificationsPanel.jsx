@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiGet, apiJSON } from "../src/api.js";
 
 // 🪷 Automatically attach logged-in userId to API requests
@@ -10,6 +11,7 @@ const withUserQuery = (path) => {
 };
 
 export default function NotificationsPanel() {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -42,7 +44,35 @@ export default function NotificationsPanel() {
       );
       setUnreadCount((prev) => Math.max(prev - 1, 0));
     } catch (err) {
-      console.error("❌ Failed to mark notification as read", err);
+      console.error("Failed to mark notification as read", err);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      await apiJSON("DELETE", withUserQuery(`/api/notifications/${id}`));
+      setNotifications((prev) => {
+        const removed = prev.find((n) => n.id === id || n.notification_id === id);
+        if (removed && !removed.is_read) {
+          setUnreadCount((count) => Math.max(count - 1, 0));
+        }
+        return prev.filter((n) => n.id !== id && n.notification_id !== id);
+      });
+    } catch (err) {
+      console.error("Failed to delete notification", err);
+    }
+  };
+
+  const handleViewDetails = async (notification) => {
+    setOpen(false);
+    await markAsRead(notification.id);
+    const link = notification.link;
+    if (!link) return;
+    if (/^https?:\/\//i.test(link)) {
+      window.open(link, "_blank", "noopener,noreferrer");
+    } else {
+      const target = link.startsWith("/") ? link : `/${link}`;
+      navigate(target);
     }
   };
 
@@ -90,25 +120,46 @@ export default function NotificationsPanel() {
                     : "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40"
                 } transition-colors`}
               >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</p>
-                  <span
-                    className={`text-xs font-semibold ${
-                      n.is_read ? "text-gray-500" : "text-green-600"
-                    }`}
-                  >
-                    {n.is_read ? "Seen" : "New"}
-                  </span>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</p>
+                    <span
+                      className={`text-xs font-semibold ${
+                        n.is_read ? "text-gray-500" : "text-green-600"
+                      }`}
+                    >
+                      {n.is_read ? "Seen" : "New"}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    {!n.is_read && (
+                      <button
+                        onClick={() => markAsRead(n.id)}
+                        className="text-xs text-blue-500 hover:text-blue-600"
+                      >
+                        Mark read
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        deleteNotification(n.id);
+                      }}
+                      className="text-xs text-red-500 hover:text-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600 dark:text-gray-300">{n.message}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">{n.message}</p>
                 {n.link && (
-                  <a
-                    href={n.link}
-                    onClick={() => markAsRead(n.id)}
+                  <button
+                    type="button"
+                    onClick={() => handleViewDetails(n)}
                     className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     View details
-                  </a>
+                  </button>
                 )}
               </div>
             ))
