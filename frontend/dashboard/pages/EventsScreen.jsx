@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import InterestsDialog from "../components/InterestsDialog.jsx";
 import NotificationsPanel from "../components/NotificationsPanel.jsx";
+import { useTheme } from "../src/theme/ThemeProvider.jsx";
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -36,24 +37,7 @@ const EventsScreen = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  // Dark mode toggle state
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("darkMode") === "true";
-  });
-
-  useEffect(() => {
-    // Keep the root element in sync so Tailwind's `dark:` classes activate immediately
-    const root = window.document.documentElement;
-    const body = window.document.body;
-    if (darkMode) {
-      root.classList.add("dark");
-      body.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-      body.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", darkMode);
-  }, [darkMode]);
+  const { isDark: darkMode, toggleTheme } = useTheme();
 
 
 
@@ -382,7 +366,7 @@ const EventsScreen = () => {
   
 
             <button
-                onClick={() => setDarkMode((prev) => !prev)}
+                onClick={toggleTheme}
                 aria-pressed={darkMode}
                 className="ml-3 px-4 py-2 rounded-lg font-medium border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:text-white transition-all duration-200"
             >  {/* Icon changes based on dark mode state */}

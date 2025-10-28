@@ -8,7 +8,9 @@ import StarIcon from '../icons/star.svg';
 import RateIcon from '../icons/rate.svg';
 import ArrowLeftIcon from '../icons/arrow-left.svg';
 
-const API_BASE_URL = typeof __backend_url !== 'undefined' ? __backend_url : 'http://localhost:3000';
+const API_BASE_URL =
+    (typeof window !== 'undefined' && window.__backend_url) ||
+    (import.meta.env?.VITE_API_URL ?? 'http://localhost:3000');
 
 function authHeaders() {
     const token = localStorage.getItem("accessToken");

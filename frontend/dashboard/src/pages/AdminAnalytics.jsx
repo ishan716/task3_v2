@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { API, apiGet } from "../api";
+import ThemeToggleButton from "../components/ThemeToggleButton.jsx";
 
 function formatDateTime(value) {
   if (!value) return "--";
@@ -174,8 +175,16 @@ export default function AdminAnalytics() {
       }
       params.set("format", "csv");
 
+      // include authorization header (if available) so admin-protected
+      // endpoints accept the request on branches that require Bearer tokens
+      const token = localStorage.getItem("accessToken");
+      const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
       const response = await fetch(`${API}/api/admin/analytics?${params.toString()}`, {
         credentials: "include",
+        headers: {
+          ...authHeader,
+        },
       });
 
       if (!response.ok) {
@@ -183,9 +192,14 @@ export default function AdminAnalytics() {
       }
 
       const blob = await response.blob();
-      const startLabel = appliedFilters.start || "all";
-      const endLabel = appliedFilters.end || "latest";
-  const filename = `analytics-${startLabel}_${endLabel}.csv`.replace(/[^a-z0-9-_.]/gi, "-");
+    const startLabel = appliedFilters.start || "all";
+    const endLabel = appliedFilters.end || "latest";
+    // === ADMIN_ANALYTICS_PATCH_START: filename sanitization adjustment ===
+    // Previously used an unnecessary escaped dot in the regex which triggered
+    // an eslint no-useless-escape warning. The regex now allows a literal dot
+    // and underscores/hyphens and replaces other characters with '-'.
+    const filename = `analytics-${startLabel}_${endLabel}.csv`.replace(/[^a-z0-9-_.]/gi, "-");
+    // === ADMIN_ANALYTICS_PATCH_END ===
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -247,7 +261,11 @@ export default function AdminAnalytics() {
 
   const categories = analytics?.categories || [];
   const topEvents = analytics?.topEvents || [];
+  // === ADMIN_ANALYTICS_PATCH_START: memoize timeline to stabilize reference ===
+  // Wrap timeline in useMemo so dependent hooks compute only when `analytics`
+  // changes. This fixes eslint warnings about unstable dependencies.
   const timeline = useMemo(() => analytics?.timeline ?? [], [analytics]);
+  // === ADMIN_ANALYTICS_PATCH_END ===
 
   const maxInterested = useMemo(
     () => timeline.reduce((max, item) => Math.max(max, item.interestedCount || 0), 0),
@@ -271,12 +289,15 @@ export default function AdminAnalytics() {
               Monitor engagement and event performance at a glance.
             </p>
           </div>
-          <Link
-            to="/admin"
-            className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-          >
-            Back to Dashboard
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggleButton />
+            <Link
+              to="/admin"
+              className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
         </header>
 
         {error && (

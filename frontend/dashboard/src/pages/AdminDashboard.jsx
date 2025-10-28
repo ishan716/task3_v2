@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API, apiGet, apiJSON } from "../api";
+import ThemeToggleButton from "../components/ThemeToggleButton.jsx";
 
 const initialForm = {
   event_title: "",
@@ -199,7 +200,8 @@ export default function AdminDashboard() {
               Manage events and categories.
             </p>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggleButton />
             <button
               type="button"
               onClick={() => navigate("/admin/analytics")}
