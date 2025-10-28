@@ -174,8 +174,16 @@ export default function AdminAnalytics() {
       }
       params.set("format", "csv");
 
+      // include authorization header (if available) so admin-protected
+      // endpoints accept the request on branches that require Bearer tokens
+      const token = localStorage.getItem("accessToken");
+      const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
       const response = await fetch(`${API}/api/admin/analytics?${params.toString()}`, {
         credentials: "include",
+        headers: {
+          ...authHeader,
+        },
       });
 
       if (!response.ok) {
