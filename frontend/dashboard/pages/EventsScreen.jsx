@@ -30,6 +30,12 @@ const EventsScreen = () => {
       []
   );
 
+  // Attach access token to API requests made from this screen
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("accessToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   // Dark mode toggle state
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem("darkMode") === "true";
@@ -49,7 +55,7 @@ const EventsScreen = () => {
     localStorage.setItem("darkMode", darkMode);
   }, [darkMode]);
 
-  
+
 
   // Helper function for status badges
   const getEventStatus = (start, end) => {
@@ -158,6 +164,9 @@ const EventsScreen = () => {
       setLoading(true);
       const response = await fetch(`${API_BASE_URL}/api/events`, {
         credentials: "include",
+        headers: {
+          ...getAuthHeaders(),
+        },
       });
       if (!response.ok) throw new Error("Failed to fetch events");
       const data = await response.json();
@@ -170,6 +179,9 @@ const EventsScreen = () => {
               try {
                 const r = await fetch(`${API_BASE_URL}/api/interested/status/${e.event_id}`, {
                   credentials: "include",
+                  headers: {
+                    ...getAuthHeaders(),
+                  },
                 });
                 if (!r.ok) return [e.event_id, false];
                 const j = await r.json();
@@ -215,7 +227,7 @@ const EventsScreen = () => {
       const method = next ? "POST" : "DELETE";
       const r = await fetch(`${API_BASE_URL}/api/interested`, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         credentials: "include",
         body: JSON.stringify({ event_id: id }),
       });
@@ -983,8 +995,4 @@ const EventsScreen = () => {
 };
 
 export default EventsScreen;
-
-
-
-
 

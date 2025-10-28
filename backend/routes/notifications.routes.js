@@ -1,9 +1,10 @@
 const express = require("express");
 const supabase = require("../db");
 const { createNotificationForAllUsers } = require("../untils/notify");
-
+const verifyToken = require("../middlewares/verifyUser");
 const router = express.Router();
 
+router.use(verifyToken);
 /**
  * Helper to extract numeric userId.
  * Supports: ?userId= query or cookie.

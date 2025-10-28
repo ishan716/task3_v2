@@ -1,8 +1,10 @@
 // backend/routes/events.routes.js
 const express = require("express");
 const supabase = require("../db");
+const verifyToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
+router.use(verifyToken);
 
 const fieldMap = {
     title: "event_title",
@@ -316,3 +318,4 @@ router.get("/events/:id/interested_counts", async (req, res) => {
 });
 
 module.exports = router;
+
