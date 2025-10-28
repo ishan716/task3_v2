@@ -12,6 +12,11 @@ const API_BASE_URL =
     (typeof window !== 'undefined' && window.__backend_url) ||
     (import.meta.env?.VITE_API_URL ?? 'http://localhost:3000');
 
+function authHeaders() {
+    const token = localStorage.getItem("accessToken");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export default function SingleEventDetailPage() {
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -44,6 +49,7 @@ export default function SingleEventDetailPage() {
                 const response = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
                     credentials: 'include',
                     signal: controller.signal,
+                    headers: { ...authHeaders() },
                 });
                 if (!response.ok) throw new Error(`HTTP status: ${response.status}`);
                 const data = await response.json();
@@ -72,6 +78,7 @@ export default function SingleEventDetailPage() {
                 const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/status`, {
                     credentials: 'include',
                     signal: controller.signal,
+                    headers: { ...authHeaders() },
                 });
                 if (!response.ok) return;
                 const data = await response.json();
@@ -95,6 +102,7 @@ export default function SingleEventDetailPage() {
                 const resp = await fetch(`${API_BASE_URL}/api/interested/status/${eventId}`, {
                     credentials: 'include',
                     signal: controller.signal,
+                    headers: { ...authHeaders()},
                 });
                 if (!resp.ok) return;
                 const json = await resp.json();
@@ -159,7 +167,7 @@ export default function SingleEventDetailPage() {
             if (nextInterested) {
                 const resp = await fetch(`${API_BASE_URL}/api/interested`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json',...authHeaders() },
                     credentials: 'include',
                     body: JSON.stringify({ event_id: eventId }),
                 });
@@ -172,7 +180,7 @@ export default function SingleEventDetailPage() {
             } else {
                 const resp = await fetch(`${API_BASE_URL}/api/interested`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json',...authHeaders() },
                     credentials: 'include',
                     body: JSON.stringify({ event_id: eventId }),
                 });
