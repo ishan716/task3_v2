@@ -10,7 +10,7 @@ router.get('/', async (req, res) => {
         // Join events, event_categories, and categories to get category name for each event
         const { data, error } = await supabase
             .from('events')
-            .select(`event_id, event_title, start_time, end_time, location, event_categories(category_id, category:categories(category_id, category_name))`)
+            .select(`event_id, event_title, description, start_time, end_time, location, event_categories(category_id, category:categories(category_id, category_name))`)
             .order('start_time', { ascending: true });
 
         if (error) throw error;
