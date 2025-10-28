@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import InterestsDialog from "../components/InterestsDialog.jsx";
 import NotificationsPanel from "../components/NotificationsPanel.jsx";
 import { useTheme } from "../src/theme/ThemeProvider.jsx";
+import { apiGet, apiJSON } from "../src/api.js";
 
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -26,15 +27,12 @@ const EventsScreen = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // state for the 3-dot menu dropdown
 
   const navigate = useNavigate();
-  const API_BASE_URL = useMemo(
-      () => import.meta.env.VITE_API_URL || "http://localhost:3000",
-      []
-  );
 
-  // Attach access token to API requests made from this screen
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("accessToken");
-    return token ? { Authorization: `Bearer ${token}` } : {};
+  const appendUserQuery = (path) => {
+    const userId = localStorage.getItem("user_id");
+    if (!userId) return path;
+    const query = `userId=${encodeURIComponent(userId)}`;
+    return path.includes("?") ? `${path}&${query}` : `${path}?${query}`;
   };
 
   const { isDark: darkMode, toggleTheme } = useTheme();
@@ -146,29 +144,16 @@ const EventsScreen = () => {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/api/events`, {
-        credentials: "include",
-        headers: {
-          ...getAuthHeaders(),
-        },
-      });
-      if (!response.ok) throw new Error("Failed to fetch events");
-      const data = await response.json();
+      const data = await apiGet("/api/events");
       setEvents(data || []);
 
       // Load interested status  (promise.all promise all the fetch calls even one fails it says false)
-      if (Array.isArray(data) && data.length) {
+      const userId = localStorage.getItem("user_id");
+      if (userId && Array.isArray(data) && data.length) {
         const pairs = await Promise.all(  
             data.map(async (e) => {
               try {
-                const r = await fetch(`${API_BASE_URL}/api/interested/status/${e.event_id}`, {
-                  credentials: "include",
-                  headers: {
-                    ...getAuthHeaders(),
-                  },
-                });
-                if (!r.ok) return [e.event_id, false];
-                const j = await r.json();
+                const j = await apiGet(appendUserQuery(`/api/interested/status/${e.event_id}`));
                 return [e.event_id, Boolean(j?.interested)];
               } catch {
                 return [e.event_id, false];
@@ -209,14 +194,12 @@ const EventsScreen = () => {
 // if interested backend post else delete and update interested count 
     try {
       const method = next ? "POST" : "DELETE";
-      const r = await fetch(`${API_BASE_URL}/api/interested`, {
-        method,
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        credentials: "include",
-        body: JSON.stringify({ event_id: id }),
-      });
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      const j = await r.json().catch(() => null);
+      const payload = { event_id: id };
+      const userId = localStorage.getItem("user_id");
+      if (userId) {
+        payload.user_id = userId;
+      }
+      const j = await apiJSON(method, appendUserQuery("/api/interested"), payload);
       if (j?.interested_count != null) {
         setEvents((list) =>
             list.map((e) =>
@@ -470,7 +453,7 @@ const EventsScreen = () => {
                             My Events
                           </button>
 
-                          {/* 🚀 Logout Button */}
+                          {/* ?? Logout Button */}
                           <button
                               onClick={() => {
                                 localStorage.removeItem("accessToken");

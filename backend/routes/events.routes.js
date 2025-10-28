@@ -16,6 +16,15 @@ const fieldMap = {
     interested_count: "interested_count",
 };
 
+function resolveUserId(req) {
+    return (
+        req.cookies?.userId ||
+        req.query?.userId ||
+        req.body?.user_id ||
+        null
+    );
+}
+
 
 // ------------------- EVENT ROUTES -------------------
 
@@ -149,8 +158,9 @@ router.get("/events/:id/status", async (req, res) => {
 // Mark event as interested
 router.post("/interested", async (req, res) => {
     const { event_id } = req.body;
-    const user_id = req.cookies.userId;
+    const user_id = resolveUserId(req);
     if (!event_id) return res.status(400).json({ error: "event_id is required" });
+    if (!user_id) return res.status(401).json({ error: "user_id is required" });
 
     try {
         const { data: existing, error: checkError } = await supabase
@@ -161,7 +171,9 @@ router.post("/interested", async (req, res) => {
             .limit(1);
         if (checkError) throw checkError;
 
-        if (existing.length > 0) {
+        const existingRows = Array.isArray(existing) ? existing : [];
+
+        if (existingRows.length > 0) {
             const { data: eventData, error: fetchError } = await supabase
                 .from("events")
                 .select("interested_count")
@@ -207,9 +219,9 @@ router.post("/interested", async (req, res) => {
 // Remove interested
 router.delete("/interested", async (req, res) => {
     const { event_id } = req.body;
-    const user_id = req.cookies.userId;
+    const user_id = resolveUserId(req);
     if (!event_id) return res.status(400).json({ error: "event_id is required" });
-    if (!user_id) return res.status(400).json({ error: "userId cookie is missing" });
+    if (!user_id) return res.status(401).json({ error: "user_id is required" });
 
     try {
         const { error: deleteError } = await supabase
@@ -244,9 +256,9 @@ router.delete("/interested", async (req, res) => {
 // Check interested status for a user
 router.get("/interested/status/:event_id", async (req, res) => {
     const { event_id } = req.params;
-    const user_id = req.cookies.userId;
+    const user_id = resolveUserId(req);
     if (!event_id) return res.status(400).json({ error: "event_id is required" });
-    if (!user_id) return res.status(400).json({ error: "userId cookie is missing" });
+    if (!user_id) return res.status(401).json({ error: "user_id is required" });
 
     try {
         const { data, error } = await supabase

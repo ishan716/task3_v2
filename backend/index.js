@@ -35,15 +35,18 @@ app.use(cookieParser());
 
 // Set a stable userId cookie if missing
 app.use((req, res, next) => {
-    if (!req.cookies.userId) {
-        res.cookie("userId", uuidv4(), {
-            httpOnly: true,
-            sameSite: "lax",
-            secure: false,
-            maxAge: 31536000000, // 1 year
-            path: "/",
-        });
+    if (req.cookies.userId) {
+        return next();
     }
+
+    const isProd = process.env.NODE_ENV === "production";
+    res.cookie("userId", uuidv4(), {
+        httpOnly: true,
+        sameSite: isProd ? "none" : "lax",
+        secure: isProd,
+        maxAge: 31536000000, // 1 year
+        path: "/",
+    });
     next();
 });
 

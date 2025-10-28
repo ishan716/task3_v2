@@ -31,6 +31,13 @@ export default function SingleEventDetailPage() {
     const { id } = useParams();
     const eventId = Number.isNaN(Number(id)) ? null : Number(id);
 
+    const appendUserQuery = (url) => {
+        const userId = localStorage.getItem("user_id");
+        if (!userId) return url;
+        const separator = url.includes("?") ? "&" : "?";
+        return `${url}${separator}userId=${encodeURIComponent(userId)}`;
+    };
+
     const interestedReqIdRef = useRef(0);
 
     // Fetch event details
@@ -99,7 +106,7 @@ export default function SingleEventDetailPage() {
 
         (async () => {
             try {
-                const resp = await fetch(`${API_BASE_URL}/api/interested/status/${eventId}`, {
+                const resp = await fetch(appendUserQuery(`${API_BASE_URL}/api/interested/status/${eventId}`), {
                     credentials: 'include',
                     signal: controller.signal,
                     headers: { ...authHeaders()},
@@ -164,12 +171,18 @@ export default function SingleEventDetailPage() {
         const reqId = ++interestedReqIdRef.current;
 
         try {
+            const userId = localStorage.getItem("user_id");
+            const payload = { event_id: eventId };
+            if (userId) {
+                payload.user_id = userId;
+            }
+
             if (nextInterested) {
-                const resp = await fetch(`${API_BASE_URL}/api/interested`, {
+                const resp = await fetch(appendUserQuery(`${API_BASE_URL}/api/interested`), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json',...authHeaders() },
                     credentials: 'include',
-                    body: JSON.stringify({ event_id: eventId }),
+                    body: JSON.stringify(payload),
                 });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const json = await resp.json().catch(() => null);
@@ -178,11 +191,11 @@ export default function SingleEventDetailPage() {
                     setEvent((e) => (e ? { ...e, interested_count: json.interested_count } : e));
                 }
             } else {
-                const resp = await fetch(`${API_BASE_URL}/api/interested`, {
+                const resp = await fetch(appendUserQuery(`${API_BASE_URL}/api/interested`), {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json',...authHeaders() },
                     credentials: 'include',
-                    body: JSON.stringify({ event_id: eventId }),
+                    body: JSON.stringify(payload),
                 });
                 if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
                 const json = await resp.json().catch(() => null);
