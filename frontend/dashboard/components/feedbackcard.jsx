@@ -233,11 +233,12 @@ export default function FeedbackCard({ eventId }) {
                 <textarea
                     value={feedback}
                     onChange={(e) => {
-                      if (e.target.value.length <= 500) setFeedback(e.target.value);
+                      if (e.target.value.length <= 500)
+                        setFeedback(e.target.value);
                     }}
                     placeholder="Tell us what you think... Every detail helps us improve!"
                     rows={4}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all duration-200 resize-none bg-gray-50 focus:bg-white"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all duration-200 resize-none bg-gray-50 focus:bg-white text-black placeholder-gray-400"
                 />
                     <div className="absolute bottom-3 right-3 text-xs text-gray-400">
                       {feedback.length}/500

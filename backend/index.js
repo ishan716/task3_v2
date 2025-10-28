@@ -64,19 +64,17 @@ app.get("/", async (req, res) => {
 });
 
 // ------------------- USE ROUTES -------------------
-// Mount more specific /api/events/* routes before /api/events/:id
-app.use("/api", interestsRouter); // includes /events/recommended, /events/discover, etc.
-app.use("/api/events", eventListRoutes); // /api/events list
-app.use("/api", ratingsRoutes);
-
-app.use("/api", eventRoutes); // includes /events/:id and related
-
-
-app.use("/api/interests", userinterestsRouter);
-app.use("/api/admin", adminRoutes);
-app.use("/api/notifications", notificationsRouter);
 app.use("/api/auth", userAuthRoutes);
 app.use("/api/auth/admin", adminAuthRoutes);
+
+// Other feature routes
+app.use("/api/notifications", notificationsRouter);
+app.use("/api/interests", userinterestsRouter);
+app.use("/api/admin", adminRoutes);
+app.use("/api/events", eventListRoutes); // /api/events list
+app.use("/api", ratingsRoutes);
+app.use("/api", interestsRouter); // includes /events/recommended, /events/discover, etc.
+app.use("/api", eventRoutes); // includes /events/:id and related
 
 
 
