@@ -125,3 +125,4 @@ router.patch("/:id/read", async (req, res) => {
 });
 
 module.exports = router;
+module.exports.resolveNumericUserId = resolveNumericUserId;
