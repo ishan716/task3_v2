@@ -1,18 +1,12 @@
-﻿import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { apiGet } from "../src/api.js";
 
 const RecommendedEvents = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
-
-  const API_BASE_URL = useMemo(() => import.meta.env.VITE_API_URL || "http://localhost:3000", []);
-
-  function authHeaders() {
-    const token = localStorage.getItem("accessToken");
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
 
   useEffect(() => {
     fetchRecommended();
@@ -35,9 +29,7 @@ const RecommendedEvents = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`${API_BASE_URL}/api/events/recommended`, { credentials: "include", headers: { ...authHeaders() } });
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      const json = await res.json();
+      const json = await apiGet("/api/events/recommended");
       setItems(Array.isArray(json.items) ? json.items : []);
     } catch (e) {
       console.error("Failed to load recommended events", e);
@@ -193,3 +185,5 @@ const RecommendedEvents = () => {
 };
 
 export default RecommendedEvents;
+
+
