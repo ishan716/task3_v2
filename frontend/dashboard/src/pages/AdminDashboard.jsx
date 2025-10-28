@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API, apiGet, apiJSON } from "../api";
+import { apiGet, apiJSON, apiDelete } from "../api";
 import ThemeToggleButton from "../components/ThemeToggleButton.jsx";
 
 const initialForm = {
@@ -172,10 +172,7 @@ export default function AdminDashboard() {
 
     setDeletingId(id);
     try {
-      await fetch(`${API}/api/admin/events/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      await apiDelete(`/api/admin/events/${id}`);
       await loadEvents();
       if (editingId === id) resetForm();
     } catch (err) {
