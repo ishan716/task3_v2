@@ -1,26 +1,17 @@
 const express = require("express");
-const cookieParser = require("cookie-parser");
-const { randomUUID } = require("crypto");
 const supabase = require("../db");
+const verifyToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
-const COOKIE_NAME = "userId";
 
-// set/read anonymous user cookie
-router.use(cookieParser());
-router.use((req, res, next) => {
-  let id = req.cookies?.[COOKIE_NAME];
-  if (!id) {
-    id = randomUUID();
-    res.cookie(COOKIE_NAME, id, {
-      httpOnly: true, sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 365, path: "/",
-    });
+function requireUserId(req, res) {
+  const userId = req.user?.user_id;
+  if (!userId) {
+    res.status(401).json({ error: "Authentication required" });
+    return null;
   }
-  req.userId = id;
-  next();
-});
+  return userId;
+}
 
 // GET all categories
 router.get("/categories", async (_req, res) => {
@@ -33,16 +24,19 @@ router.get("/categories", async (_req, res) => {
 });
 
 // GET my interests (with names)
-router.get("/interests/me", async (req, res) => {
+router.get("/interests/me", verifyToken, async (req, res) => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   try {
     const { data: rows, error } = await supabase
       .from("interested_category")
       .select("category_id")
-      .eq("user_id", req.userId);
+      .eq("user_id", userId);
     if (error) throw error;
 
     const ids = (rows || []).map(r => r.category_id);
-    if (!ids.length) return res.json({ user_id: req.userId, categories: [] });
+    if (!ids.length) return res.json({ user_id: userId, categories: [] });
 
     const { data: cats, error: cerr } = await supabase
       .from("categories")
@@ -50,7 +44,7 @@ router.get("/interests/me", async (req, res) => {
       .in("category_id", ids);
     if (cerr) throw cerr;
 
-    res.json({ user_id: req.userId, categories: cats });
+    res.json({ user_id: userId, categories: cats });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "server error" });
@@ -58,7 +52,10 @@ router.get("/interests/me", async (req, res) => {
 });
 
 // POST replace my interests
-router.post("/interests/me", async (req, res) => {
+router.post("/interests/me", verifyToken, async (req, res) => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   try {
     const categories = Array.isArray(req.body?.categories)
       ? [...new Set(req.body.categories.map(String))]
@@ -68,19 +65,19 @@ router.post("/interests/me", async (req, res) => {
     const { error: delErr } = await supabase
       .from("interested_category")
       .delete()
-      .eq("user_id", req.userId);
+      .eq("user_id", userId);
     if (delErr) throw delErr;
 
     if (!categories.length)
-      return res.json({ user_id: req.userId, saved: [] });
+      return res.json({ user_id: userId, saved: [] });
 
-    const rows = categories.map(id => ({ user_id: req.userId, category_id: id }));
+    const rows = categories.map(id => ({ user_id: userId, category_id: id }));
     const { error: insErr } = await supabase
       .from("interested_category")
       .insert(rows);
     if (insErr) throw insErr;
 
-    res.json({ user_id: req.userId, saved: categories });
+    res.json({ user_id: userId, saved: categories });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "server error" });
@@ -152,13 +149,16 @@ router.get("/events/discover", async (req, res) => {
 });
 
 // GET /api/events/recommended -> based on my saved interests
-router.get("/events/recommended", async (req, res) => {
+router.get("/events/recommended", verifyToken, async (req, res) => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   try {
     // 1) load my category ids
     const { data: mine, error: mErr } = await supabase
       .from("interested_category")
       .select("category_id")
-      .eq("user_id", req.userId);
+      .eq("user_id", userId);
     if (mErr) throw mErr;
 
     const ids = (mine || []).map(r => r.category_id);

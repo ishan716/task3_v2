@@ -1,7 +1,12 @@
 const express = require("express");
 const supabase = require("../db");
+const { createNotificationForAllUsers } = require("../untils/notify");
+const verifyAdminToken = require("../middlewares/verifyAdmin");
 
 const router = express.Router();
+
+// Protect all admin routes
+router.use(verifyAdminToken);
 
 function computeEventStatus(event) {
     const now = Date.now();
@@ -42,6 +47,13 @@ function mapEventRow(row) {
         interested_count: Number(row.interested_count) || 0,
         categories,
     };
+}
+
+function parseNumericUserId(value) {
+    if (value === undefined || value === null) return null;
+    const parsed = Number(value);
+    if (!Number.isInteger(parsed) || parsed <= 0) return null;
+    return parsed;
 }
 
 function getRecentMonthKeys(count = 6) {
@@ -386,35 +398,60 @@ async function getNextEventId() {
     return next;
 }
 
-router.get("/events", async (_req, res) => {
-    try {
-        const { data, error } = await supabase
-            .from("events")
-            .select(
-                `
-                event_id,
-                event_title,
-                description,
-                location,
-                start_time,
-                end_time,
-                interested_count,
-                event_categories (
-                    category_id,
-                    category:categories ( category_id, category_name )
-                )
-            `
-            )
-            .order("start_time", { ascending: true });
+router.get("/events", async (req, res) => {
+  try {
+    // 🧁 Current logged-in user (from cookies)
+    const user_id = parseNumericUserId(req.cookies?.userId);
 
-        if (error) throw error;
+    // 🎟 Fetch all events
+    const { data: eventsData, error: eventsError } = await supabase
+      .from("events")
+      .select(`
+        event_id,
+        event_title,
+        description,
+        location,
+        start_time,
+        end_time,
+        interested_count,
+        event_categories (
+          category_id,
+          category:categories ( category_id, category_name )
+        )
+      `)
+      .order("start_time", { ascending: true });
 
-        const events = (data || []).map(mapEventRow);
-        res.json({ items: events, total: events.length });
-    } catch (err) {
-        console.error("Admin GET /events error:", err.message);
-        res.status(500).json({ error: "Failed to fetch events" });
+    if (eventsError) throw eventsError;
+
+    const events = (eventsData || []).map(mapEventRow);
+
+    // 🌼 Fetch unread notification count (specific to the user)
+    let unreadCount = 0;
+    if (user_id) {
+      const { count, error: notifError } = await supabase
+        .from("user_notifications")
+        .select("*", { count: "exact", head: true }) // just count
+        .eq("user_id", user_id)
+        .eq("is_read", false);
+
+      if (notifError) {
+        console.warn("⚠️ Could not fetch unread notifications:", notifError.message);
+      } else {
+        unreadCount = count || 0;
+      }
     }
+
+    // 🌸 Send combined data
+    res.json({
+      items: events,
+      total: events.length,
+      unread_notifications: unreadCount, // 🪷 used for badge display
+    });
+
+  } catch (err) {
+    console.error("❌ Admin GET /events error:", err.message);
+    res.status(500).json({ error: "Failed to fetch events" });
+  }
 });
 
 router.get("/analytics", async (req, res) => {
@@ -591,6 +628,26 @@ router.post("/events", async (req, res) => {
         }
 
         const event = await fetchEvent(eventId);
+
+        const trimmedDescription =
+            typeof description === "string" ? description.trim() : "";
+
+        const notificationMessage =
+            (trimmedDescription && trimmedDescription.slice(0, 160)) ||
+            [
+                location ? `Location: ${location}` : null,
+                start_time ? `Starts: ${start_time}` : null,
+            ]
+                .filter(Boolean)
+                .join(" • ") ||
+            "A new event has been posted.";
+
+        await createNotificationForAllUsers(
+            `New Event: ${event_title}`,
+            notificationMessage,
+            `/events/${eventId}`
+        );
+
         res.status(201).json(event);
     } catch (err) {
         console.error("Admin POST /events error:", err.message);

@@ -1,7 +1,17 @@
 export const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+function authHeaders() {
+  const token = localStorage.getItem("accessToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function apiGet(path) {
-  const r = await fetch(`${API}${path}`, { credentials: "include" });
+  const r = await fetch(`${API}${path}`, {
+    credentials: "include",
+    headers: {
+      ...authHeaders(),
+    },
+  });
   if (!r.ok) throw new Error(`GET ${path} -> ${r.status}`);
   return r.json();
 }
@@ -9,9 +19,12 @@ export async function apiGet(path) {
 export async function apiJSON(method, path, body) {
   const r = await fetch(`${API}${path}`, {
     method,
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
     credentials: "include",
-    body: JSON.stringify(body ?? {})
+    body: JSON.stringify(body ?? {}),
   });
   if (!r.ok) throw new Error(`${method} ${path} -> ${r.status}`);
   return r.json();

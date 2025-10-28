@@ -1,6 +1,3 @@
-
-
-
 const express = require("express");
 // Start periodic event sync
 require("./fetchAndSyncEvents");
@@ -17,9 +14,10 @@ const ratingsRoutes = require("./routes/ratings.routes");
 const eventListRoutes = require("./routes/eventlist.routes");
 
 const interestsRouter = require("./routes/interests.routes");
-
+const userAuthRoutes = require("./routes/auth/userAuthRoutes");
 const userinterestsRouter = require("./routes/userinterests.routes");
 const adminRoutes = require("./routes/admin.routes");
+const adminAuthRoutes = require("./routes/auth/adminAuthRoutes");
 
 
 const app = express();
@@ -49,7 +47,7 @@ app.use((req, res, next) => {
     }
     next();
 });
-app.use("/api/notifications", notificationsRouter);
+
 // ------------------- TEST ROUTE -------------------
 app.get("/", async (req, res) => {
     try {
@@ -76,6 +74,9 @@ app.use("/api", eventRoutes); // includes /events/:id and related
 
 app.use("/api/interests", userinterestsRouter);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationsRouter);
+app.use("/api/auth", userAuthRoutes);
+app.use("/api/auth/admin", adminAuthRoutes);
 
 
 
