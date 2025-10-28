@@ -75,7 +75,7 @@ export default function NotificationsPanel() {
 
       {/* 📋 Notification Dropdown */}
       {open && (
-        <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute left-0 right-auto sm:right-0 sm:left-auto mt-2 w-[min(20rem,calc(100vw-1.5rem))] sm:w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <p className="text-center py-4 text-gray-500 dark:text-gray-400">
               No notifications yet
