@@ -156,5 +156,95 @@ describe('Interests recommended events', () => {
     expect(res.body).toEqual({ error: 'Authentication required' });
     expect(supabase.from).not.toHaveBeenCalled();
   });
-});
 
+  it('updates recommended events when interests change', async () => {
+    // First call: interests = ['music'] -> recommends event 1
+    const interestsEqA = jest.fn().mockResolvedValue({
+      data: [{ category_id: 'music' }],
+      error: null,
+    });
+    const interestsSelectA = jest.fn().mockReturnValue({ eq: interestsEqA });
+
+    const mapSelectA = jest.fn().mockResolvedValue({
+      data: [{ event_id: 1, category_id: 'music' }],
+      error: null,
+    });
+
+    const eventsOrderA = jest.fn().mockResolvedValue({
+      data: [
+        {
+          event_id: 1,
+          event_title: 'Jazz Night',
+          start_time: '2025-04-01T18:00:00Z',
+          end_time: '2025-04-01T21:00:00Z',
+          description: 'Smooth jazz evening',
+          location: 'Main Hall',
+        },
+      ],
+      error: null,
+    });
+    const eventsInA = jest.fn().mockReturnValue({ order: eventsOrderA });
+    const eventsSelectA = jest.fn().mockReturnValue({ in: eventsInA });
+
+    const categoriesInA = jest.fn().mockResolvedValue({
+      data: [{ category_id: 'music', category_name: 'Music' }],
+      error: null,
+    });
+    const categoriesSelectA = jest.fn().mockReturnValue({ in: categoriesInA });
+
+    // Second call: interests = ['tech'] -> recommends event 2
+    const interestsEqB = jest.fn().mockResolvedValue({
+      data: [{ category_id: 'tech' }],
+      error: null,
+    });
+    const interestsSelectB = jest.fn().mockReturnValue({ eq: interestsEqB });
+
+    const mapSelectB = jest.fn().mockResolvedValue({
+      data: [{ event_id: 2, category_id: 'tech' }],
+      error: null,
+    });
+
+    const eventsOrderB = jest.fn().mockResolvedValue({
+      data: [
+        {
+          event_id: 2,
+          event_title: 'Tech Expo',
+          start_time: '2025-05-10T10:00:00Z',
+          end_time: '2025-05-10T16:00:00Z',
+          description: 'Latest gadgets showcase',
+          location: 'Convention Center',
+        },
+      ],
+      error: null,
+    });
+    const eventsInB = jest.fn().mockReturnValue({ order: eventsOrderB });
+    const eventsSelectB = jest.fn().mockReturnValue({ in: eventsInB });
+
+    const categoriesInB = jest.fn().mockResolvedValue({
+      data: [{ category_id: 'tech', category_name: 'Technology' }],
+      error: null,
+    });
+    const categoriesSelectB = jest.fn().mockReturnValue({ in: categoriesInB });
+
+    // Wire supabase.from calls for both requests (4 per request)
+    supabase.from
+      // First GET sequence
+      .mockImplementationOnce(() => ({ select: interestsSelectA }))
+      .mockImplementationOnce(() => ({ select: mapSelectA }))
+      .mockImplementationOnce(() => ({ select: eventsSelectA }))
+      .mockImplementationOnce(() => ({ select: categoriesSelectA }))
+      // Second GET sequence (after interests changed)
+      .mockImplementationOnce(() => ({ select: interestsSelectB }))
+      .mockImplementationOnce(() => ({ select: mapSelectB }))
+      .mockImplementationOnce(() => ({ select: eventsSelectB }))
+      .mockImplementationOnce(() => ({ select: categoriesSelectB }));
+
+    const first = await request(app).get('/api/events/recommended').expect(200);
+    expect(first.body.items.map((e) => e.event_id)).toEqual([1]);
+    expect(first.body.total).toBe(1);
+
+    const second = await request(app).get('/api/events/recommended').expect(200);
+    expect(second.body.items.map((e) => e.event_id)).toEqual([2]);
+    expect(second.body.total).toBe(1);
+  });
+});

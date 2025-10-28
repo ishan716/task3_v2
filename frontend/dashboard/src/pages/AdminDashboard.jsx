@@ -254,10 +254,14 @@ export default function AdminDashboard() {
             )}
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="lg:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label
+                  htmlFor="admin-event-title"
+                  className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
+                >
                   Event Title
                 </label>
                 <input
+                  id="admin-event-title"
                   type="text"
                   value={form.event_title}
                   onChange={(e) =>
@@ -272,10 +276,14 @@ export default function AdminDashboard() {
                 />
               </div>
               <div className="lg:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label
+                  htmlFor="admin-event-description"
+                  className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
+                >
                   Description
                 </label>
                 <textarea
+                  id="admin-event-description"
                   value={form.description}
                   onChange={(e) =>
                     setForm((prev) => ({
@@ -289,10 +297,14 @@ export default function AdminDashboard() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label
+                  htmlFor="admin-event-location"
+                  className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
+                >
                   Location
                 </label>
                 <input
+                  id="admin-event-location"
                   type="text"
                   value={form.location}
                   onChange={(e) =>
@@ -307,10 +319,14 @@ export default function AdminDashboard() {
               </div>
               <div />
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label
+                  htmlFor="admin-event-start"
+                  className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
+                >
                   Start Time
                 </label>
                 <input
+                  id="admin-event-start"
                   type="datetime-local"
                   value={form.start_time}
                   onChange={(e) =>
@@ -324,10 +340,14 @@ export default function AdminDashboard() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
+                <label
+                  htmlFor="admin-event-end"
+                  className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200"
+                >
                   End Time
                 </label>
                 <input
+                  id="admin-event-end"
                   type="datetime-local"
                   value={form.end_time}
                   onChange={(e) =>
