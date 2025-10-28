@@ -11,13 +11,13 @@ async function createNotificationForAllUsers(title, message, link = null) {
       .from("notifications")
       .insert([{ title, message, link }])
       .select("id, title, message, link, created_at")
-      .single();
+      .single(); //as a single line
 
     if (notifError) throw notifError;
 
     const { data: users, error: userError } = await supabase
       .from("users")
-      .select("user_id");
+      .select("user_id"); //retrieve all user ids
 
     if (userError) throw userError;
     if (!users || users.length === 0) {
@@ -30,7 +30,7 @@ async function createNotificationForAllUsers(title, message, link = null) {
       notification_id: notif.id,
       is_read: false,
       seen_at: null,
-    }));
+    })); //map noti to all users
 
     const { error: insertError } = await supabase
       .from("user_notifications")
@@ -53,7 +53,7 @@ async function updateNotificationForLink(link, fields = {}) {
   if (Object.prototype.hasOwnProperty.call(fields, "message")) updates.message = fields.message;
   if (Object.prototype.hasOwnProperty.call(fields, "link")) updates.link = fields.link;
 
-  if (!Object.keys(updates).length) return false;
+  if (!Object.keys(updates).length) return false; //nothing to update
 
   try {
     const { data, error } = await supabase
@@ -64,7 +64,7 @@ async function updateNotificationForLink(link, fields = {}) {
 
     if (error) throw error;
 
-    return Array.isArray(data) && data.length > 0;
+    return Array.isArray(data) && data.length > 0; //return true if updated
   } catch (err) {
     console.error("Error updating notification:", err.message);
     return false;
@@ -78,31 +78,31 @@ async function deleteNotificationForLink(link) {
     const { data: notifications, error: fetchError } = await supabase
       .from("notifications")
       .select("id")
-      .eq("link", link);
+      .eq("link", link); //get notifications with this link
 
     if (fetchError) throw fetchError;
 
     const ids = Array.isArray(notifications)
       ? notifications.map((n) => n.id).filter(Boolean)
-      : [];
+      : []; //extract ids
 
     if (!ids.length) return 0;
 
     const { error: userDeleteError } = await supabase
       .from("user_notifications")
       .delete()
-      .in("notification_id", ids);
+      .in("notification_id", ids); //delete user_notifications entries
 
     if (userDeleteError) throw userDeleteError;
 
     const { error: notifDeleteError } = await supabase
       .from("notifications")
       .delete()
-      .in("id", ids);
+      .in("id", ids); //delete notifications entries
 
     if (notifDeleteError) throw notifDeleteError;
 
-    return ids.length;
+    return ids.length; //number of deleted notifications
   } catch (err) {
     console.error("Error deleting notifications:", err.message);
     return 0;

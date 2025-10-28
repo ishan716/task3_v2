@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-const ThemeContext = createContext(undefined);
-const STORAGE_KEY = "darkMode";
+const ThemeContext = createContext(undefined); //default undefined to catch errors
+const STORAGE_KEY = "darkMode"; //localStorage key
 
 function getStoredPreference() {
   if (typeof window === "undefined") {
@@ -9,10 +9,10 @@ function getStoredPreference() {
   }
   const stored = window.localStorage.getItem(STORAGE_KEY);
   return stored === "true";
-}
+} //default to false (light mode)
 
 export function ThemeProvider({ children }) {
-  const [isDark, setIsDark] = useState(() => getStoredPreference());
+  const [isDark, setIsDark] = useState(() => getStoredPreference()); //lazy init from storage
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -28,8 +28,8 @@ export function ThemeProvider({ children }) {
       body?.classList.remove("dark");
     }
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(STORAGE_KEY, String(isDark));
-    }
+      window.localStorage.setItem(STORAGE_KEY, String(isDark));  //remember preference
+    } 
   }, [isDark]);
 
   const value = useMemo(
@@ -51,3 +51,4 @@ export function useTheme() {
   }
   return context;
 }
+//this ensures that the hook is used within the provider not browser or os. local storage is only available in browser.

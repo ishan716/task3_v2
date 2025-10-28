@@ -1,93 +1,88 @@
-// backend/userinterests.routes.js
 const express = require("express");
-const cookieParser = require("cookie-parser");
-const { randomUUID } = require("crypto");
 const supabase = require("../db");
+const verifyToken = require("../middlewares/verifyUser");
 
 const router = express.Router();
-const COOKIE_NAME = "userId";
 
-// cookie attach
-router.use(cookieParser());
-router.use((req, res, next) => {
-  let id = req.cookies?.[COOKIE_NAME];
-  if (!id) {
-    id = randomUUID();
-    res.cookie(COOKIE_NAME, id, {
-      httpOnly: true, sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 1000 * 60 * 60 * 24 * 365, path: "/"
-    });
+function requireUserId(req, res) {
+  const userId = req.user?.user_id;
+  if (!userId) {
+    res.status(401).json({ error: "Authentication required" });
+    return null;
   }
-  req.userId = id;
-  next();
-});
-
-// ✅ relative paths (because of app.use("/interests", ...))
+  return userId;
+}
 
 // GET /interests/me
-router.get("/me", async (req, res) => {
+router.get("/me", verifyToken, async (req, res) => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   const { data: rows, error } = await supabase
     .from("interested_category")
     .select("category_id")
-    .eq("user_id", req.userId);
+    .eq("user_id", userId); //fetch user's interested categories
 
   if (error) return res.status(500).json({ error: error.message });
 
-  const ids = (rows || []).map(r => r.category_id);
-  if (!ids.length) return res.json({ user_id: req.userId, categories: [] });
+  const ids = (rows || []).map((r) => r.category_id);
+  if (!ids.length) return res.json({ user_id: userId, categories: [] });
 
   const { data: cats, error: cerr } = await supabase
     .from("categories")
     .select("category_id, category_name")
-    .in("category_id", ids);
+    .in("category_id", ids); //get category details
 
   if (cerr) return res.status(500).json({ error: cerr.message });
-  res.json({ user_id: req.userId, categories: cats });
+  res.json({ user_id: userId, categories: cats });
 });
 
 // POST /interests/me  {categories: ["C1","C3"]}
-router.post("/me", async (req, res) => {
+router.post("/me", verifyToken, async (req, res) => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   const categories = Array.isArray(req.body?.categories)
     ? [...new Set(req.body.categories.map(String))]
     : [];
 
-  // replace: delete then insert
   const { error: delErr } = await supabase
     .from("interested_category")
     .delete()
-    .eq("user_id", req.userId);
+    .eq("user_id", userId); //clear existing interests
   if (delErr) return res.status(500).json({ error: delErr.message });
 
-  if (!categories.length) return res.json({ user_id: req.userId, saved: [] });
+  if (!categories.length) return res.json({ user_id: userId, saved: [] });
 
-  const rows = categories.map(id => ({ user_id: req.userId, category_id: id }));
-  const { error: insErr } = await supabase.from("interested_category").insert(rows);
+  const rows = categories.map((id) => ({ user_id: userId, category_id: id }));
+  const { error: insErr } = await supabase.from("interested_category").insert(rows);//insert new interests
   if (insErr) return res.status(500).json({ error: insErr.message });
 
-  res.json({ user_id: req.userId, saved: categories });
+  res.json({ user_id: userId, saved: categories });
 });
 
 // DELETE /interests/me  (clear all)
-router.delete("/me", async (req, res) => {
+router.delete("/me", verifyToken, async (req, res) => {
+  const userId = requireUserId(req, res);
+  if (!userId) return;
+
   const { error } = await supabase
     .from("interested_category")
     .delete()
-    .eq("user_id", req.userId);
+    .eq("user_id", userId); //delete all interests
   if (error) return res.status(500).json({ error: error.message });
-  res.json({ user_id: req.userId, deleted: true });
+  res.json({ user_id: userId, deleted: true });
 });
 
 // GET /interests/categories
-router.get("/categories", async (req, res) => {
+router.get("/categories", async (_req, res) => {
   const { data, error } = await supabase
     .from("categories")
     .select("category_id, category_name")
-    .order("category_name", { ascending: true });
+    .order("category_name", { ascending: true }); //fetch all categories ordered by name
 
   if (error) return res.status(500).json({ error: error.message });
-  res.json(data || []); // must be an ARRAY
+  res.json(data || []);
 });
-
 
 module.exports = router;

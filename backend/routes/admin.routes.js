@@ -1,6 +1,6 @@
 const express = require("express");
 const supabase = require("../db");
-const { createNotificationForAllUsers, updateNotificationForLink, deleteNotificationForLink } = require("../untils/notify");
+const { createNotificationForAllUsers, deleteNotificationForLink } = require("../untils/notify");
 const verifyAdminToken = require("../middlewares/verifyAdmin");
 
 const router = express.Router();
@@ -560,6 +560,30 @@ router.get("/events/:id", async (req, res) => {
 
     try {
         const event = await fetchEvent(eventId);
+
+        if (event) {
+            const trimmedDescription =
+                typeof event.description === "string" ? event.description.trim() : "";
+
+            const notificationMessage =
+                (trimmedDescription && trimmedDescription.slice(0, 160)) ||
+                [
+                    event.location ? `Location: ${event.location}` : null,
+                    event.start_time ? `Starts: ${event.start_time}` : null,
+                    event.end_time ? `Ends: ${event.end_time}` : null,
+                ]
+                    .filter(Boolean)
+                    .join(" | ") ||
+                "Event details have been updated.";
+
+            await deleteNotificationForLink(`/events/${eventId}`);
+            await createNotificationForAllUsers(
+                `Updated Event: ${event.event_title || "Event"}`,
+                notificationMessage,
+                `/events/${eventId}`
+            );
+        }
+
         res.json(event);
     } catch (err) {
         if (err?.code === "PGRST116") {
@@ -627,11 +651,11 @@ router.post("/events", async (req, res) => {
             }
         }
 
-        const event = await fetchEvent(eventId);
+        const event = await fetchEvent(eventId); //all details of event
 
         const trimmedDescription =
             typeof description === "string" ? description.trim() : "";
-
+        //notification message content
         const notificationMessage =
             (trimmedDescription && trimmedDescription.slice(0, 160)) ||
             [
@@ -640,7 +664,7 @@ router.post("/events", async (req, res) => {
             ]
                 .filter(Boolean)
                 .join(" • ") ||
-            "A new event has been posted.";
+            "A new event has been posted."; //if no description or location/start time or message
 
         await createNotificationForAllUsers(
             `New Event: ${event_title}`,
@@ -723,18 +747,12 @@ router.put("/events/:id", async (req, res) => {
                     .join(" | ") ||
                 "Event details have been updated.";
 
-            const updated = await updateNotificationForLink(`/events/${eventId}`, {
-                title: `Updated Event: ${event.event_title || "Event"}`,
-                message: notificationMessage,
-            });
-
-            if (!updated) {
-                await createNotificationForAllUsers(
-                    `Updated Event: ${event.event_title || "Event"}`,
-                    notificationMessage,
-                    `/events/${eventId}`
-                );
-            }
+            await deleteNotificationForLink(`/events/${eventId}`);
+            await createNotificationForAllUsers(
+                `Updated Event: ${event.event_title || "Event"}`,
+                notificationMessage,
+                `/events/${eventId}`
+            );
         }
 
         res.json(event);

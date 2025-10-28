@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiGet, apiJSON } from "../src/api.js";
 
-// 🪷 Automatically attach logged-in userId to API requests
+// Automatically attach logged-in userId to API requests
 const withUserQuery = (path) => {
-  const userId = localStorage.getItem("user_id"); // 👈 gets from login
+  const userId = localStorage.getItem("user_id"); //gets from login
   if (!userId) return path;
-  const query = `userId=${encodeURIComponent(userId)}`;
+  const query = `userId=${encodeURIComponent(userId)}`;  
   return path.includes("?") ? `${path}&${query}` : `${path}?${query}`;
 };
 
@@ -16,7 +16,7 @@ export default function NotificationsPanel() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
 
-  // 🔹 Load notifications on mount
+  //  Load notifications on mount
   useEffect(() => {
     fetchNotifications();
   }, []);
@@ -33,7 +33,7 @@ export default function NotificationsPanel() {
     }
   };
 
-  // 🔹 Mark a notification as read
+  // Mark a notification as read
   const markAsRead = async (id) => {
     try {
       await apiJSON("PATCH", withUserQuery(`/api/notifications/${id}/read`));
@@ -54,7 +54,7 @@ export default function NotificationsPanel() {
       setNotifications((prev) => {
         const removed = prev.find((n) => n.id === id || n.notification_id === id);
         if (removed && !removed.is_read) {
-          setUnreadCount((count) => Math.max(count - 1, 0));
+          setUnreadCount((count) => Math.max(count - 1, 0)); 
         }
         return prev.filter((n) => n.id !== id && n.notification_id !== id);
       });
@@ -62,7 +62,7 @@ export default function NotificationsPanel() {
       console.error("Failed to delete notification", err);
     }
   };
-
+  //navigate to link view
   const handleViewDetails = async (notification) => {
     setOpen(false);
     await markAsRead(notification.id);
@@ -73,6 +73,17 @@ export default function NotificationsPanel() {
     } else {
       const target = link.startsWith("/") ? link : `/${link}`;
       navigate(target);
+    }
+  };
+  const handleMarkAllAsRead = async () => {
+    try {
+      await apiJSON("PUT", withUserQuery("/api/notifications/readall"));
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, is_read: true, seen_at: new Date().toISOString() }))
+      );
+      setUnreadCount(0);
+    } catch (err) {
+      console.error("Failed to mark all notifications as read", err);
     }
   };
 
@@ -103,15 +114,15 @@ export default function NotificationsPanel() {
         )}
       </button>
 
-      {/* 📋 Notification Dropdown */}
+      {/*  Notification Dropdown */}
       {open && (
         <div className="absolute left-0 right-auto sm:right-0 sm:left-auto mt-2 w-[min(20rem,calc(100vw-1.5rem))] sm:w-80 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-96 overflow-y-auto">
           {notifications.length === 0 ? (
             <p className="text-center py-4 text-gray-500 dark:text-gray-400">
               No notifications yet
             </p>
-          ) : (
-            notifications.map((n) => (
+          ) : (<>
+            {notifications.map((n) => (
               <div
                 key={n.id}
                 className={`px-4 py-3 border-b border-gray-100 dark:border-gray-800 ${
@@ -119,7 +130,8 @@ export default function NotificationsPanel() {
                     ? "opacity-70"
                     : "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40"
                 } transition-colors`}
-              >
+              > 
+              
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <p className="font-semibold text-gray-800 dark:text-gray-100">{n.title}</p>
@@ -162,10 +174,14 @@ export default function NotificationsPanel() {
                   </button>
                 )}
               </div>
-            ))
+            ))}
+            </>
           )}
+          
         </div>
+
       )}
+
     </div>
   );
 }

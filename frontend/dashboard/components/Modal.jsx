@@ -6,8 +6,8 @@ export default function Modal({ open, onClose, children }) {
   useEffect(() => {
     if (!open) return;
     const onKey = e => e.key === "Escape" && onClose?.();
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey); //listen for escape key
+    document.body.style.overflow = "hidden"; //prevent background scroll
     ref.current?.focus();
     return () => { 
       document.removeEventListener("keydown", onKey); 
@@ -16,7 +16,7 @@ export default function Modal({ open, onClose, children }) {
   }, [open, onClose]);
   
   if (!open) return null;
-
+// centered modal with backdrop blur background cannot close by clicking inside modal but background click..
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center" 

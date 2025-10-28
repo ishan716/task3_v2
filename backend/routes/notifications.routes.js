@@ -17,7 +17,7 @@ function resolveNumericUserId(req) {
   if (!raw.length) return null;
 
   const parsed = Number(raw);
-  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  if (!Number.isInteger(parsed) || parsed <= 0) return null; //check for positve
   return parsed;
 }
 
@@ -26,18 +26,18 @@ function extractEventIdFromLink(link) {
   if (typeof link !== "string") return null;
   const match = link.match(/\/events\/(\d+)/);
   if (!match) return null;
-  const eventId = Number(match[1]);
-  return Number.isInteger(eventId) && eventId > 0 ? eventId : null;
+  const eventId = Number(match[1]); //convert to real
+  return Number.isInteger(eventId) && eventId > 0 ? eventId : null; //return if positive int
 }
 
 /** 
- * 🔹 GET /api/notifications 
+ * GET /api/notifications 
  * Fetch notifications for a specific user
  */
 router.get("/", async (req, res) => {
   try {
     const user_id = resolveNumericUserId(req);
-    if (!user_id) return res.json({ items: [], unseen_count: 0 });
+    if (!user_id) return res.json({ items: [], unseen_count: 0 }); //if no user, return empty
 
     const { data, error } = await supabase
       .from("user_notifications")
@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
       `
       )
       .eq("user_id", user_id)
-      .order("notifications(created_at)", { ascending: false });
+      .order("notifications(created_at)", { ascending: false }); //order by newest
 
     if (error) throw error;
 
@@ -82,38 +82,38 @@ router.get("/", async (req, res) => {
     mapped.forEach((n) => {
       const eventId = extractEventIdFromLink(n.link);
       if (eventId) {
-        eventIds.set(eventId, n.link);
+        eventIds.set(eventId, n.link); //map event id with link 42: "/events/42"
       }
     });
 
     let filtered = mapped;
-
+//if event id map is not empty do this
     if (eventIds.size) {
-      const ids = Array.from(eventIds.keys());
+      const ids = Array.from(eventIds.keys()); //get all ids from map
       const { data: existingEvents, error: fetchEventsError } = await supabase
         .from("events")
         .select("event_id")
-        .in("event_id", ids);
-      if (fetchEventsError) throw fetchEventsError;
+        .in("event_id", ids); //check if event ids exist in events table
+      if (fetchEventsError) throw fetchEventsError;  //if event id is not in db events delete it
 
-      const existingSet = new Set((existingEvents || []).map((row) => Number(row.event_id)));
+      const existingSet = new Set((existingEvents || []).map((row) => Number(row.event_id))); 
 
       const staleLinks = new Set();
       filtered = mapped.filter((n) => {
         const eventId = extractEventIdFromLink(n.link);
         if (eventId && !existingSet.has(eventId)) {
           if (n.link) staleLinks.add(n.link);
-          return false;
+          return false; //remove stale notifications
         }
-        return true;
+        return true; //keep valid notifications
       });
 
       for (const link of staleLinks) {
-        await deleteNotificationForLink(link);
+        await deleteNotificationForLink(link); //delete stale notifications from user_notifications and notifications table
       }
     }
 
-    const unseenCount = filtered.filter((n) => !n.is_read).length;
+    const unseenCount = filtered.filter((n) => !n.is_read).length; //count unread notifications
 
     res.json({ items: filtered, unseen_count: unseenCount });
   } catch (err) {
@@ -123,7 +123,7 @@ router.get("/", async (req, res) => {
 });
 
 /** 
- * 🔹 POST /api/notifications 
+ * POST /api/notifications 
  * Create a new notification for all users (Admin use)
  */
 router.post("/", async (req, res) => {
@@ -141,7 +141,7 @@ router.post("/", async (req, res) => {
 });
 
 /** 
- * 🔹 PATCH /api/notifications/:id/read 
+ * PATCH /api/notifications/:id/read 
  * Mark a single notification as read for this specific user
  */
 router.patch("/:id/read", async (req, res) => {

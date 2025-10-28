@@ -19,8 +19,8 @@ export default function InterestsDialog({ open, onClose, onSaved }) {
           apiGet("/api/interests/categories"),
           apiGet("/api/interests/me").catch(() => ({ categories: [] }))
         ]);
-        setCategories(Array.isArray(cats) ? cats : []);
-        setSelected(new Set((mine.categories || []).map(c => c.category_id)));
+        setCategories(Array.isArray(cats) ? cats : []);  //all categories
+        setSelected(new Set((mine.categories || []).map(c => c.category_id))); //user's selected categories
       } catch (e) {
         console.error(e);
         setError("Couldn’t load categories. Check API URL / CORS / server.");
@@ -35,18 +35,24 @@ export default function InterestsDialog({ open, onClose, onSaved }) {
     const n = new Set(prev);
     n.has(id) ? n.delete(id) : n.add(id);
     return n;
-  });
+  }); //toggle selection already selected remove(prev set has it) it else add it
 
   const submit = async () => {
     const ids = Array.from(selected);
     setSaving(true);
     try {
       await apiJSON("POST", "/api/interests/me", { categories: ids });
-      onSaved?.(ids);
-      onClose?.();
+      onSaved?.(ids); //notify parent of new selection
+      onClose?.(); //close dialog on success
     } finally {
       setSaving(false);
     }
+  };
+  const selectAll = () => {
+    setSelected(new Set(categories.map(c => c.category_id)));
+  };
+  const clearAll = () => {
+    setSelected(new Set());
   };
 
   if (!open) return null;
