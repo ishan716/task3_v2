@@ -1,29 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { apiGet } from "../src/api.js";
+import { useTheme } from "../src/theme/ThemeProvider.jsx";
 
 const RecommendedEvents = () => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
+  const { isDark: darkMode, toggleTheme } = useTheme();
 
   useEffect(() => {
     fetchRecommended();
   }, []);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    const body = window.document.body;
-    if (darkMode) {
-      root.classList.add("dark");
-      body.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-      body.classList.remove("dark");
-    }
-    localStorage.setItem("darkMode", darkMode);
-  }, [darkMode]);
 
   const fetchRecommended = async () => {
     try {
@@ -71,7 +59,7 @@ const RecommendedEvents = () => {
               Refresh
             </button>
             <button
-              onClick={() => setDarkMode((prev) => !prev)}
+              onClick={toggleTheme}
               aria-pressed={darkMode}
               className="px-3 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 dark:bg-gray-800 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
             >

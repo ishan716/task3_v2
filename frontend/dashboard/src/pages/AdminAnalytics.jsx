@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { API, apiGet } from "../api";
+import ThemeToggleButton from "../components/ThemeToggleButton.jsx";
 
 function formatDateTime(value) {
   if (!value) return "--";
@@ -288,12 +289,15 @@ export default function AdminAnalytics() {
               Monitor engagement and event performance at a glance.
             </p>
           </div>
-          <Link
-            to="/admin"
-            className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
-          >
-            Back to Dashboard
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggleButton />
+            <Link
+              to="/admin"
+              className="inline-flex items-center rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
         </header>
 
         {error && (
